@@ -20,7 +20,7 @@ modelstat<-function()
 {
   #boucle
   for (j in 1:n){ #y boucle sur les lignes du dataframe
-    #likelihood
+    # LIKELIHOOD
     N[j]~dpois(lambda[j]) #N tiré dans poisson dépend de param lambda
     DL1[j]~dbin(p[j],N[j]) #C1 vecteur. y=1-> premier élemt C1. C1 varie tous les ans
     
@@ -49,6 +49,8 @@ modelstat<-function()
     area[j] ~ dlnorm(muS,tauS)
   }#end boucle
   
+
+# PRIOR
   for (i in 1:Nriver){
     epsilon[1,i]~dnorm(0,tau_epsilon[1]) #random effect for density
     epsilon[2,i]~dnorm(0,tau_epsilon[2]) #random effect for capture probability
@@ -57,32 +59,8 @@ modelstat<-function()
   sigma_eps[1] ~ dunif(0,10)
   tau_epsilon[2] <- pow(sigma_eps[2],-2)# variance intra-annuelle
   sigma_eps[2] ~ dunif(0,10)
-  
-  #prior 
-  #p~dbeta(alpha,beta)
-  for (t in 1:max(popAge)){
-    #p[t] <- P#~dbeta(alpha,beta)# proba capture /an
-    #d[a]~dgamma(1,1)#gamma défini positif
-    #muD[a]~dgamma(0.1, 0.1)# densité moyenne/an
-    #muD[a]~dnorm(0, 0.1)# densité moyenne/an
-    #log_muD[t]<-log(muD[t])
-    #log_muD[t] <- gamma[1]+ gamma[2]*t
-    #log_muD[t] <- gamma[1]+ (pow(t,gamma[2]))
-    muD[t]<- exp(gamma[1]+gamma[2]*(t - mean(popAge[])))
-    #muD[t]<- exp((pow((t - mean(year[])),gamma[2])))
 
-    # tauD[t] <- pow(sigmaD[t],-2)# variance intra-annuelle
-    # sigmaD[t] ~ dunif(0,10)
-    
-    #log_muP[t] <- delta[1]+ delta[2]*AGE[] + (pow(t,delta[3]))
-    muP[t]<- ilogit(delta[1]+ delta[2]*t)#+ (pow(t,delta[3])))
-    #muP[t,2]<- ilogit(delta[1]+ delta[2]) #+ (pow(t,delta[3])))
-    
-    # tauP[t] <- pow(sigmaP[t],-2)# variance intra-annuelle
-    # sigmaP[t] ~ dunif(0,10)
-  }
-  
-  #alpha~dgamma(0.1, 0.1)
+    #alpha~dgamma(0.1, 0.1)
   #beta~dgamma(0.1, 0.1)
   gamma[1]~dnorm(0, 0.1)
   gamma[2]~dnorm(0, 0.1)#;T(0,)#~dgamma(1, 1)
@@ -101,7 +79,21 @@ modelstat<-function()
   sigmaP ~ dunif(0,10)
   
   #P ~dbeta(alpha,beta)
+
+ # PREDICTION
+  for (pop in 1:Nriver){
+    for (t in 1:max(popAge)){
+
+    muD[pop,t]<- exp(gamma[1]+gamma[2]*(t - mean(popAge[])) + epsilon[1,pop])
+
+    muP[pop,t]<- ilogit(delta[1]+ delta[2]*t + epsilon[2,pop])#+ (pow(t,delta[3])))
+    #muP[t,2]<- ilogit(delta[1]+ delta[2]) #+ (pow(t,delta[3])))
+
+  } # end loop t
+  } # end loop pop
 }#end model
+
+
 #hist(rbeta(100000,3,2))
 
 
