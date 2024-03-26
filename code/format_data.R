@@ -1,0 +1,226 @@
+
+###example with the 1+ dataset.
+data1<-read.table("data/datajakdenyoung.txt",h=T)
+data2<-read.table("data/datajakdenadult.txt",h=T)
+data <- data1 # ##loading 1+ dataset
+#data<-rbind(data1,data2)
+table(data$basin)
+
+##creating colonization vectors for any datasets (any of the two density datasets that is)  
+#uncol=date jusqu'? laquelle certain pas de repro naturelle
+uncolvector<-c(1983,1968,1978,1994,NA,1977,1984,2003,1985,1986,1986,1962,NA,1996,1985,1982,NA,1962,2000,1991,1998,1997,2004,NA,1981,1996,2017,1996,1982,1987,1986,1968,2014,2014,1986,1984,1997,2016,2004,1995,1988,1962,1979,1988,1996,1995,1987,1984,2004,2011) #still a problem here with gorfous
+#col=reproduction=colonis?
+colvector  <-c(1983,1968,1980,1994,NA,1977,1989,2007,1989,1992,1986,1962,NA,1996,1985,1990,NA,1962,2000,2000,2000,2000,2008,NA,1981,1996,2017,1999,1990,1987,1986,1968,2014,2014,1986,1984,1997,2016, NA ,2000,1992,1962,1979,1988,1996,1999,1987,1984, NA ,2013)
+
+##pick the one you need. It should work for DL1/DL2 for now. And should be easily modifiable for PE or P1/P2. 
+
+data$year<-as.numeric(substr(data$date, 7, 10))  #cr?e variable $year. prend les caract?res aux positions 7 ? 10 pour l'ann?e: 08.02.1970
+mydates = as.POSIXlt(data$date)
+#Norvegienne$year<-as.numeric(format(as.Date(mydates), "%Y"))
+data$month<-as.numeric(format(as.Date(mydates), "%m"))
+#df$day<-as.numeric(format(as.Date(mydates), "%d"))
+#data$jday<-mydates$yday # julian day
+
+data <- subset(data, month %in% c(12,1,2,3))
+
+data$Year_code <- data$year-min(data$year)+1 # recode year
+
+# Cohort year: les captures de decembre sont attribuées à l'année suivante
+data$Year_cohort <- ifelse(data$month ==12, data$Year_code+1, data$Year_code)
+
+
+#c() ouvre chaine de caract?res
+#vecteur uncoldate assigne ann?e de colonisation pour chaque bassin versant
+uncoldate<-rep("NA",length(data$year))
+coldate<-rep("NA",length(data$year))
+
+for (i in 1:length(data$year)) {
+	if (data$basin[i]=="Acaena") {
+		uncoldate[i]<-uncolvector[1]
+		coldate[i]<-colvector[1]		
+	} else if (data$basin[i]=="Albatros") {
+		uncoldate[i]<-uncolvector[2]
+		coldate[i]<-colvector[2]	
+	} else if (data$basin[i]=="Americains") {
+		uncoldate[i]<-uncolvector[3]
+		coldate[i]<-colvector[3]
+	} else if (data$basin[i]=="Armor") {
+		uncoldate[i]<-uncolvector[4]
+		coldate[i]<-colvector[4]
+	} else if (data$basin[i]=="Azorella") {
+		uncoldate[i]<-uncolvector[5]
+		coldate[i]<-colvector[5]		
+	} else if (data$basin[i]=="Borgne") {
+		uncoldate[i]<-uncolvector[6]
+		coldate[i]<-colvector[6]
+	} else if (data$basin[i]=="Bungay") {
+		uncoldate[i]<-uncolvector[7]
+		coldate[i]<-colvector[7]		
+	} else if (data$basin[i]=="Calcedoines") {
+		uncoldate[i]<-uncolvector[8]
+		coldate[i]<-colvector[8]		
+	} else if (data$basin[i]=="Cataractes") {
+		uncoldate[i]<-uncolvector[9]
+		coldate[i]<-colvector[9]		
+	} else if (data$basin[i]=="Charbon") {
+		uncoldate[i]<-uncolvector[10]
+		coldate[i]<-colvector[10]
+	} else if (data$basin[i]=="Chasseurs") {
+		uncoldate[i]<-uncolvector[11]
+		coldate[i]<-colvector[11]
+	} else if (data$basin[i]=="Chateau") {
+		uncoldate[i]<-uncolvector[12]
+		coldate[i]<-colvector[12]
+	} else if (data$basin[i]=="Chateau_>_Ferme_ou_Etangs") {
+		uncoldate[i]<-uncolvector[13]
+		coldate[i]<-colvector[13]				
+	} else if (data$basin[i]=="Claree") {
+		uncoldate[i]<-uncolvector[14]
+		coldate[i]<-colvector[14]			
+	} else if (data$basin[i]=="Doute") {
+		uncoldate[i]<-uncolvector[15]
+		coldate[i]<-colvector[15]			
+	} else if (data$basin[i]=="Est") {
+		uncoldate[i]<-uncolvector[16]
+		coldate[i]<-colvector[16]
+	} else if (data$basin[i]=="Etang_des_Beliers") {
+		uncoldate[i]<-uncolvector[17]
+		coldate[i]<-colvector[17]				
+	} else if (data$basin[i]=="Ferme") {
+		uncoldate[i]<-uncolvector[18]
+		coldate[i]<-colvector[18]
+	} else if (data$basin[i]=="Gorfous_1") {
+		uncoldate[i]<-uncolvector[19]
+		coldate[i]<-colvector[19]		
+	} else if (data$basin[i]=="Gorfous_2") {
+		uncoldate[i]<-uncolvector[20]
+		coldate[i]<-colvector[20]
+	} else if (data$basin[i]=="Gorfous_4") {
+		uncoldate[i]<-uncolvector[21]
+		coldate[i]<-colvector[21]
+	} else if (data$basin[i]=="Gorfous_5") {
+		uncoldate[i]<-uncolvector[22]
+		coldate[i]<-colvector[22]
+	} else if (data$basin[i]=="Grisanche") {
+		uncoldate[i]<-uncolvector[23]
+		coldate[i]<-colvector[23]
+	} else if (data$basin[i]=="Isthme_du_Lac") {
+		uncoldate[i]<-uncolvector[24]
+		coldate[i]<-colvector[24]		
+	} else if (data$basin[i]=="Korrigans") {
+		uncoldate[i]<-uncolvector[25]
+		coldate[i]<-colvector[25]
+	} else if (data$basin[i]=="Levant") {
+		uncoldate[i]<-uncolvector[26]
+		coldate[i]<-colvector[26]
+	} else if (data$basin[i]=="Loz?re") {
+		uncoldate[i]<-uncolvector[27]
+		coldate[i]<-colvector[27]				
+	} else if (data$basin[i]=="Macaronis") {
+		uncoldate[i]<-uncolvector[28]
+		coldate[i]<-colvector[28]
+	} else if (data$basin[i]=="Manchots") {
+		uncoldate[i]<-uncolvector[29]
+		coldate[i]<-colvector[29]
+	} else if (data$basin[i]=="Mouettes") {
+		uncoldate[i]<-uncolvector[30]
+		coldate[i]<-colvector[30]
+	} else if (data$basin[i]=="Nord") {
+		uncoldate[i]<-uncolvector[31]
+		coldate[i]<-colvector[31]
+	} else if (data$basin[i]=="Norvegienne") {
+		uncoldate[i]<-uncolvector[32]
+		coldate[i]<-colvector[32]
+	} else if (data$basin[i]=="Olsen") {
+		uncoldate[i]<-uncolvector[33]
+		coldate[i]<-colvector[33]
+	} else if (data$basin[i]=="Orgues") {
+		uncoldate[i]<-uncolvector[34]
+		coldate[i]<-colvector[34]
+	} else if (data$basin[i]=="Pepins") {
+		uncoldate[i]<-uncolvector[35]
+		coldate[i]<-colvector[35]
+	} else if (data$basin[i]=="Planchette") {
+		uncoldate[i]<-uncolvector[36]
+		coldate[i]<-colvector[36]
+	} else if (data$basin[i]=="Port-Kirk") {
+		uncoldate[i]<-uncolvector[37]
+		coldate[i]<-colvector[37]		
+	} else if (data$basin[i]=="Radioleine") {
+		uncoldate[i]<-uncolvector[38]
+		coldate[i]<-colvector[38]
+	} else if (data$basin[i]=="Ravin_du_Charbon") {
+		uncoldate[i]<-uncolvector[39]
+		coldate[i]<-colvector[39]				
+	} else if (data$basin[i]=="Rohan") {
+		uncoldate[i]<-uncolvector[40]
+		coldate[i]<-colvector[40]
+	} else if (data$basin[i]=="Serail") {
+		uncoldate[i]<-uncolvector[41]
+		coldate[i]<-colvector[41]
+	} else if (data$basin[i]=="Studer") {
+		uncoldate[i]<-uncolvector[42]
+		coldate[i]<-colvector[42]
+	} else if (data$basin[i]=="Sud") {
+		uncoldate[i]<-uncolvector[43]
+		coldate[i]<-colvector[43]
+	} else if (data$basin[i]=="Trois_Lacs") {
+		uncoldate[i]<-uncolvector[44]
+		coldate[i]<-colvector[44]
+	} else if (data$basin[i]=="Val-Travers") {
+		uncoldate[i]<-uncolvector[45]
+		coldate[i]<-colvector[45]
+	} else if (data$basin[i]=="Val_d'Auge") {
+		uncoldate[i]<-uncolvector[46]
+		coldate[i]<-colvector[46]
+	} else if (data$basin[i]=="Val_de_l'Ouest") {
+		uncoldate[i]<-uncolvector[47]
+		coldate[i]<-colvector[47]
+	} else if (data$basin[i]=="Val_Raide") {
+		uncoldate[i]<-uncolvector[48]
+		coldate[i]<-colvector[48]
+	} else if (data$basin[i]=="Valdotaine") {
+		uncoldate[i]<-uncolvector[49]
+		coldate[i]<-colvector[49]		
+	} else if (data$basin[i]=="Vallee_des_Merveilles") {
+		uncoldate[i]<-uncolvector[50]
+		coldate[i]<-colvector[50]
+	}
+}
+
+data$coldate<-as.numeric(coldate)
+data$uncoldate<-as.numeric(uncoldate)
+doubtDate<-(data$coldate)-(data$uncoldate) # the span of colonization date uncertainty. We may want to draw into this if we are to account for that source of variation. 
+
+#here we define the age of sampling with regard to the population age. 
+data$popAge<-as.numeric(data$Year_cohort + min(data$year)+1)-as.numeric(data$coldate)+1
+
+
+#here we filter to obtain only sites that were sampled in DL1 / DL2. 
+#nouveau dataset dans les NA
+data<-subset(data, !is.na(DL1) & !(is.na(DL2)) ) #garde seulement les deux passages
+
+#note that these IDs are not the same between different datasets: if we want to merge resutls, we will have to use basin names. 
+data$riverID<-unclass(factor(data$basin)) #unclass prend le rang de chaque cat?gorie. Basin transform?e en facteur: variable cat?gorielle
+#data$siteID<-rowid(data$XYZ,factor(data$riverID))  # this is the sampling site ID WITHIN the riverID. Useful for hierarchization. #rowid rang ? l'int?rieur d'un facteur, pour site dans rivi?re
+
+
+
+plot(data$year,data$area)
+
+## here we place the data in a format needed for Jags. 
+
+dataToJags <- list(                                               #liste aggr?g?e d'objets
+  n = nrow(data),                                               #N fait n de long avec r?p?titions NA
+  Nriver= length(table(data$riverID)),
+  DL1 = data$DL1,						#D1 issu de proba de capture binomial
+  DL2 = data$DL2,
+  #n = rep(NA,nrow(data)), 
+  area = (as.numeric(data$area)),  # we work in log here
+  riverID = data$riverID,
+  #siteID = data$siteID,  
+  year= data$Year_cohort,#data$year,   # it is the year of sampling
+  popAge=data$popAge#,  # it is the population age. 
+  #max_year = max(data$Year_cohort)
+)
+
