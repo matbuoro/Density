@@ -157,6 +157,14 @@ jagsfit <- jags(dataToJags,
                 n.burnin = 5000*1,   # discard first X iterations
                 n.thin = 1) # keep every X iterations //ex: garde tous les 100 itérations
 
+save(jagsfit,file="results/jagsfit.Rdata")
+
+# Save densities estimates for each pop and age of colonisation (medians)
+DensitiesByPop <- jagsfit$BUGSoutput$median$muD
+colnames(DensitiesByPop) <- 1:60
+rownames(DensitiesByPop) <- levels(factor(data$basin))
+write.csv(round(DensitiesByPop,3), file="results/DensitiesByPop_median.csv")
+
 pdf(file="results/MCMC.pdf")
 #print(jagsfit)
 traplot(jagsfit, parms = c("sigma_eps"))#trois chaines, trois paramètres
@@ -174,14 +182,40 @@ denplot(jagsfit, parms = c("gamma","delta")) #distrib posteriori marginales
 caterplot(jagsfit, parms = c("gamma","delta")) #distrib posteriori marginales
 
 traplot(jagsfit, parms = c("muS","sigmaS"))#trois chaines, trois paramètres
+caterplot(jagsfit,"area", reorder = FALSE, horizontal=FALSE);#points(0.4)
 
 #caterplot(jagsfit, paste0("p[",year_vec,"]"), reorder = FALSE, horizontal=FALSE);#points(0.4)
 #caterplot(jagsfit, paste0("muD[",year_vec,"]"), reorder = FALSE, horizontal=FALSE);#points(0.4)
-caterplot(jagsfit,"muP", reorder = FALSE, horizontal=FALSE);#points(0.4)
-caterplot(jagsfit,"muD", reorder = FALSE, horizontal=FALSE);#points(0.4)
-caterplot(jagsfit,"area", reorder = FALSE, horizontal=FALSE);#points(0.4)
+#caterplot(jagsfit,"muP", reorder = FALSE, horizontal=FALSE);#points(0.4)
+#caterplot(jagsfit,"muD", reorder = FALSE, horizontal=FALSE);#points(0.4)
+
 #caterplot(jagsfit, "N", reorder = FALSE, horizontal=FALSE);#points(N) #spécifier N
 caterplot(jagsfit,paste0("epsilon[1,",1:32,"]"), reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));#points(0.4)
 caterplot(jagsfit,paste0("epsilon[2,",1:32,"]"), reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));#points(0.4)
+
+
+
+#caterplot(jagsfit,paste0("muD[1,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[pop])
+caterplot(jagsfit,paste0("muD[1,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[1])
+caterplot(jagsfit,paste0("muD[2,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[2])
+caterplot(jagsfit,paste0("muD[3,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[3])
+caterplot(jagsfit,paste0("muD[4,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[4])
+caterplot(jagsfit,paste0("muD[5,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[5])
+caterplot(jagsfit,paste0("muD[6,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[6])
+caterplot(jagsfit,paste0("muD[7,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[7])
+caterplot(jagsfit,paste0("muD[8,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[8])
+caterplot(jagsfit,paste0("muD[9,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[9])
+caterplot(jagsfit,paste0("muD[10,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[10])
+
+caterplot(jagsfit,paste0("muD[11,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[11])
+caterplot(jagsfit,paste0("muD[12,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[12])
+caterplot(jagsfit,paste0("muD[13,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[13])
+caterplot(jagsfit,paste0("muD[14,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[14])
+caterplot(jagsfit,paste0("muD[15,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[15])
+caterplot(jagsfit,paste0("muD[16,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[16])
+caterplot(jagsfit,paste0("muD[17,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[17])
+caterplot(jagsfit,paste0("muD[18,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[18])
+caterplot(jagsfit,paste0("muD[19,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[19])
+caterplot(jagsfit,paste0("muD[20,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[20])
 
 dev.off()
