@@ -2,7 +2,7 @@ library(R2jags)
 library(mcmcplots)
 load.module("glm")
 #setwd("C:/Users/gmbrahy/Documents/Modele_densite/data")
-
+#coucou
 ##données observées
 #1 site 1 date
 #data <- list(C1=31,C2=18,S=1335)
