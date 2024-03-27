@@ -235,8 +235,8 @@ data$riverID<-unclass(factor(data$basin)) #unclass prend le rang de chaque cat?g
 
 dataToJags <- list(                                               #liste aggr?g?e d'objets
   n = nrow(data),  
-  AgeFish=data$age,                                             #N fait n de long avec r?p?titions NA
-  Nriver= length(unique(data$riverID)),
+  #AgeFish=data$age,                                             #N fait n de long avec r?p?titions NA
+  #Nriver= length(unique(data$riverID)),
   DL1 = data$DL1,						#D1 issu de proba de capture binomial
   DL2 = data$DL2,
   #n = rep(NA,nrow(data)), 
