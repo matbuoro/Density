@@ -1,10 +1,19 @@
 
 ###example with the 1+ dataset.
 data1<-read.table("data/datajakdenyoung.txt",h=T)
+data1$age <- 1
 data2<-read.table("data/datajakdenadult.txt",h=T)
-data <- data1 # ##loading 1+ dataset
-#data<-rbind(data1,data2)
+data2$age <- 2
+data<-rbind(data1,data2)
 table(data$basin)
+
+
+# Remove area too large
+data$area <- gsub(",", ".", data$area) # convert comma to dot
+data$area <- as.numeric(data$area) # convert to numeric
+data <- data[-which(data$area>2500),] # remove area above 2500m2
+
+
 
 ##creating colonization vectors for any datasets (any of the two density datasets that is)  
 #uncol=date jusqu'? laquelle certain pas de repro naturelle
@@ -14,27 +23,24 @@ colvector  <-c(1983,1968,1980,1994,NA,1977,1989,2007,1989,1992,1986,1962,NA,1996
 
 ##pick the one you need. It should work for DL1/DL2 for now. And should be easily modifiable for PE or P1/P2. 
 
+##Get years and month
 data$year<-as.numeric(substr(data$date, 7, 10))  #cr?e variable $year. prend les caract?res aux positions 7 ? 10 pour l'ann?e: 08.02.1970
-mydates = as.POSIXlt(data$date)
+data$month<-as.numeric(substr(data$date, 4, 5)) 
+#mydates = as.POSIXlt(data$date, format = c("%d-%m-%Y"))
 #Norvegienne$year<-as.numeric(format(as.Date(mydates), "%Y"))
-data$month<-as.numeric(format(as.Date(mydates), "%m"))
+#data$month<-as.numeric(format(as.Date(mydates), "%m"))
 #df$day<-as.numeric(format(as.Date(mydates), "%d"))
 #data$jday<-mydates$yday # julian day
 
-data <- subset(data, month %in% c(12,1,2,3))
 
-data$Year_code <- data$year-min(data$year)+1 # recode year
-
-# Cohort year: les captures de decembre sont attribuées à l'année suivante
-data$Year_cohort <- ifelse(data$month ==12, data$Year_code+1, data$Year_code)
 
 
 #c() ouvre chaine de caract?res
 #vecteur uncoldate assigne ann?e de colonisation pour chaque bassin versant
-uncoldate<-rep("NA",length(data$year))
-coldate<-rep("NA",length(data$year))
+uncoldate<-NULL#rep(,nrow(data))
+coldate<-NULL#rep(,nrow(data))
 
-for (i in 1:length(data$year)) {
+for (i in 1:nrow(data)) {
 	if (data$basin[i]=="Acaena") {
 		uncoldate[i]<-uncolvector[1]
 		coldate[i]<-colvector[1]		
@@ -193,34 +199,53 @@ data$uncoldate<-as.numeric(uncoldate)
 doubtDate<-(data$coldate)-(data$uncoldate) # the span of colonization date uncertainty. We may want to draw into this if we are to account for that source of variation. 
 
 #here we define the age of sampling with regard to the population age. 
-data$popAge<-as.numeric(data$Year_cohort + min(data$year)+1)-as.numeric(data$coldate)+1
+data$popAge<-as.numeric(data$year)-as.numeric(data$coldate)
+data <- data[-which(data$popAge<0),] # remove colDate > observation
 
+
+# Keep only data from december to February
+data <- subset(data, month %in% c(12,1,2,3))
+
+
+
+# Cohort year: les captures de decembre sont attribuées à l'année suivante
+#data$Year_code <- data$year-min(data$year)+1 # recode year
+#data$Year_cohort <- ifelse(data$month ==12, data$Year_code+1, data$Year_code)
+data$Age_cohort <- ifelse(data$month ==12, data$popAge+1, data$popAge)
+
+
+#here we filter to obtain only sites that were sampled P1. 
+#data_P<-subset(data, !is.na(P1))
 
 #here we filter to obtain only sites that were sampled in DL1 / DL2. 
 #nouveau dataset dans les NA
 data<-subset(data, !is.na(DL1) & !(is.na(DL2)) ) #garde seulement les deux passages
 
+
+
+
+#plot(data$year,data$area)
+
+## here we place the data in a format needed for Jags. 
+
+data <- subset(data, age==1) # ##loading 1+ dataset only
 #note that these IDs are not the same between different datasets: if we want to merge resutls, we will have to use basin names. 
 data$riverID<-unclass(factor(data$basin)) #unclass prend le rang de chaque cat?gorie. Basin transform?e en facteur: variable cat?gorielle
 #data$siteID<-rowid(data$XYZ,factor(data$riverID))  # this is the sampling site ID WITHIN the riverID. Useful for hierarchization. #rowid rang ? l'int?rieur d'un facteur, pour site dans rivi?re
 
-
-
-plot(data$year,data$area)
-
-## here we place the data in a format needed for Jags. 
-
 dataToJags <- list(                                               #liste aggr?g?e d'objets
-  n = nrow(data),                                               #N fait n de long avec r?p?titions NA
-  Nriver= length(table(data$riverID)),
+  n = nrow(data),  
+  AgeFish=data$age,                                             #N fait n de long avec r?p?titions NA
+  Nriver= length(unique(data$riverID)),
   DL1 = data$DL1,						#D1 issu de proba de capture binomial
   DL2 = data$DL2,
   #n = rep(NA,nrow(data)), 
-  area = (as.numeric(data$area)),  # we work in log here
+  area = data$area,  # we work in log here
   riverID = data$riverID,
+  #vec_riverID=unique(data$riverID),
   #siteID = data$siteID,  
-  year= data$Year_cohort,#data$year,   # it is the year of sampling
-  popAge=data$popAge#,  # it is the population age. 
+  year= data$year - min(data$year)+1,   # it is the year of sampling
+  popAge=data$Age_cohort#,  # it is the population age /!\ but by cohort gb+mb 27032024
   #max_year = max(data$Year_cohort)
 )
 
