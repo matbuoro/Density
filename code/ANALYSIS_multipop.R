@@ -10,7 +10,7 @@ load.module("glm")
 #setwd("C:/Users/gmbrahy/Documents/Modele_densite/data")
 
 ## DATA ####
-source("code/format_data.R")
+source("code/DATA_format.R")
 str(dataToJags)
 
 ## MODEL ####
@@ -44,6 +44,8 @@ inits<-function(){
     pmoy=0.7,
     delta=c(NA,0),#0.3),
     gamma=c(-1,0),#0),
+    kappa=0.2,
+    mu_alpha=2,
     #log_muD=rep(1,max(datatojags$year))
     #p=rbeta(max(datatojags$year),2,2),
     #d=rgamma(max(datatojags$year),1,1)
@@ -62,12 +64,14 @@ inits<-function(){
 
 parameters <-c(
   #"P","p","d",
-  "Kappa","nu","B","s",
+  "kappa","alpha","mu_alpha","s",
+  "sigma_alpha",
   "Dens_pred","P_pred","Dens_pred_all",
   "muD","sigmaD",
   #"alpha","beta",
   "gamma","delta",
-  "muP","sigmaP",
+  #"muP",
+  "sigmaP",
   'muS',"sigmaS",
   "area","sigma_eps",
   "epsilonD","epsilonP"
@@ -97,16 +101,21 @@ write.csv(round(DensitiesByPop,3), file="results/DensitiesByPop_median.csv")
 
 pdf(file="results/MCMC.pdf")
 #print(jagsfit)
-traplot(jagsfit, parms = c("sigma_eps"))#trois chaines, trois paramètres
+#traplot(jagsfit, parms = c("sigma_eps"))#trois chaines, trois paramètres
 #traplot(jagsfit, parms = c("p"))#trois chaines, trois paramètres
 #caterplot(jagsfit, parms = c("p"), reorder=FALSE)#trois chaines, trois paramètres
-traplot(jagsfit, parms = c("sigmaP"))#trois chaines, trois paramètres
+#traplot(jagsfit, parms = c("sigmaP"))#trois chaines, trois paramètres
 #traplot(jagsfit, parms = c("muP"))#trois chaines, trois paramètres
 
-traplot(jagsfit, parms = c("sigmaD"))#trois chaines, trois paramètres
+traplot(jagsfit, parms = c("sigmaD", "sigmaP","sigma_alpha"))#trois chaines, trois paramètres
 #traplot(jagsfit, parms = c("muD"))#trois chaines, trois paramètres
 #caterplot(jagsfit, parms = c("p"), reorder=FALSE)#trois chaines, trois paramètres
 #denplot(jagsfit, parms = c("p","d")) #distrib posteriori marginales
+traplot(jagsfit, parms = c("kappa","mu_alpha")) #distrib posteriori marginales
+
+traplot(jagsfit, parms = c("alpha")) #distrib posteriori marginales
+caterplot(jagsfit,"alpha", reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));
+
 traplot(jagsfit, parms = c("gamma","delta")) #distrib posteriori marginales
 denplot(jagsfit, parms = c("gamma","delta")) #distrib posteriori marginales
 caterplot(jagsfit, parms = c("gamma","delta")) #distrib posteriori marginales
