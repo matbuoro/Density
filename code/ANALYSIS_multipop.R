@@ -52,9 +52,10 @@ inits<-function(){
 
 parameters <-c(
   #"P","p","d",
-  "kappa","alpha",#"s"
-  "mu_alpha","mu_kappa",
-  "sigma_alpha",
+  "s",
+  "kappa","alpha","beta",
+  "mu_alpha","mu_kappa","mu_beta",
+  "sigma_alpha","sigma_kappa","sigma_beta",
   "Dens_pred","P_pred","Dens_pred_all",
   "muD","sigmaD",
   #"alpha","beta",
@@ -74,9 +75,9 @@ jagsfit <- jags(dataToJags,
                 parameters.to.save = parameters,  
                 n.chains = 2,  # Number of chains to run.
                 inits = inits,  # initial values for hyperparameters
-                n.iter = 10000*2,    # 10000 MCMC iterations + si converge pas
+                n.iter = 10000*10,    # 10000 MCMC iterations + si converge pas
                 n.burnin = 5000,   # discard first X iterations
-                n.thin = 1) # keep every X iterations //ex: garde tous les 100 itérations
+                n.thin = 10) # keep every X iterations //ex: garde tous les 100 itérations
 
 save(jagsfit,file="results/jagsfit.Rdata")
 
@@ -96,16 +97,17 @@ pdf(file="results/MCMC.pdf")
 #traplot(jagsfit, parms = c("sigmaP"))#trois chaines, trois paramètres
 #traplot(jagsfit, parms = c("muP"))#trois chaines, trois paramètres
 
-traplot(jagsfit, parms = c("sigmaD", "sigmaP","sigma_alpha"))#trois chaines, trois paramètres
+traplot(jagsfit, parms = c("sigmaD", "sigmaP","sigma_alpha" ,"sigma_kappa","sigma_beta"))#trois chaines, trois paramètres
 #traplot(jagsfit, parms = c("muD"))#trois chaines, trois paramètres
 #caterplot(jagsfit, parms = c("p"), reorder=FALSE)#trois chaines, trois paramètres
 #denplot(jagsfit, parms = c("p","d")) #distrib posteriori marginales
-traplot(jagsfit, parms = c("mu_kappa","mu_alpha")) #distrib posteriori marginales
+traplot(jagsfit, parms = c("mu_kappa","mu_alpha","mu_beta","s")) #distrib posteriori marginales
 
 traplot(jagsfit, parms = c("alpha")) #distrib posteriori marginales
 caterplot(jagsfit,"alpha", reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));
 
 caterplot(jagsfit,"kappa", reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));
+caterplot(jagsfit,"beta", reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));
 
 traplot(jagsfit, parms = c("gamma","delta")) #distrib posteriori marginales
 denplot(jagsfit, parms = c("gamma","delta")) #distrib posteriori marginales
@@ -124,11 +126,15 @@ caterplot(jagsfit,"area", reorder = FALSE, horizontal=FALSE);#points(0.4)
 caterplot(jagsfit,paste0("epsilonD[",1:32,"]"), reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));#points(0.4)
 caterplot(jagsfit,paste0("epsilonP[",1:32,"]"), reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));#points(0.4)
 
+caterplot(jagsfit,paste0("Dens_pred_all[",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title("All populations")
 
 
 #caterplot(jagsfit,paste0("muD[1,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[pop])
 caterplot(jagsfit,paste0("Dens_pred[1,",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title(levels(factor(data$basin))[1])
 caterplot(jagsfit,paste0("Dens_pred[2,",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title(levels(factor(data$basin))[2])
+caterplot(jagsfit,paste0("Dens_pred[3,",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title(levels(factor(data$basin))[3])
+
+
 
 dev.off()
 

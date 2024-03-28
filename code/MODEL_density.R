@@ -27,7 +27,7 @@ modelstat<-function()
     #muD[j] <- A + (Kappa-A) / pow(C+Q*exp(-B*popAge[j]), 1/v)
     #muD[j] <- Kappa * (1 / pow(1+Q*exp(-B*popAge[j]), 1/nu))
     #log_muD[j] <- log(muD[j])
-    muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(-log(popAge[j])))
+    muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(beta[riverID[j]]*log(popAge[j])))
 
     ## Proba capture
     logit(p[j]) <- logit_p[j]
@@ -43,20 +43,47 @@ modelstat<-function()
   for (i in 1:max(riverID)){
     muS[i]~dnorm(0, 0.1)#~dgamma(1, 1)
 
-    alpha[i]~dnorm(mu_alpha,tau_alpha)
-    kappa[i]~dnorm(mu_kappa,tau_kappa)
-
     epsilonD[i]~dnorm(0,tau_epsilon[1]) #random effect for density
     epsilonP[i]~dnorm(0,tau_epsilon[2]) #random effect for capture probability
+
+
+    #alpha[i]~dnorm(mu_alpha,tau_alpha)
+    #kappa[i]~dnorm(mu_kappa,tau_kappa)
+
+    # reparameterization to real line
+    kappa[i] <- exp(theta.k[i])
+    alpha[i] <- exp(theta.a[i]) - 1
+    beta[i] <- -1 * exp(theta.b[i])
+    
+    # reparameterization to meaningful parameters
+    ymax[i] <- kappa[i]
+    ymin[i] <- kappa[i] / (1 + alpha[i])
+    ghalf[i] <- -1 * (kappa[i] * beta[i]) / 4
+    
+    theta.a[i] ~ dnorm(mu_alpha, tau_alpha)
+    theta.b[i] <- mu_beta #~ dnorm(mu_beta, tau_beta)
+    theta.k[i] <- mu_kappa #~ dnorm(mu_kappa, tau_kappa)
   }
-  tau_epsilon[1] <- pow(sigma_eps[1],-2)# variance intra-annuelle
+
+# root node priors - population means
+  #mu_alpha ~ dnorm(0, 0.1);T(0,)
+    mu_alpha~dgamma(2,1/s[2])
+    s[2]~dchisqr(2)
+  mu_beta <- 0 #~ dnorm(0, 0.1)
+  #mu_kappa ~ dnorm(0, 0.1);T(0,)
+  mu_kappa~dgamma(2,1/s[1])
+    s[1]~dchisqr(2)
+
+  tau_epsilon[1] <- pow(sigma_eps[1],-2)
   sigma_eps[1] ~ dunif(0,10)
-  tau_epsilon[2] <- pow(sigma_eps[2],-2)# variance intra-annuelle
+  tau_epsilon[2] <- pow(sigma_eps[2],-2)
   sigma_eps[2] ~ dunif(0,10)
-  tau_alpha <- pow(sigma_alpha,-2)# variance intra-annuelle
+  tau_alpha <- pow(sigma_alpha,-2)
   sigma_alpha ~ dunif(0,100)
-    tau_kappa <- pow(sigma_kappa,-2)# variance intra-annuelle
+    tau_kappa <- pow(sigma_kappa,-2)#
   sigma_kappa ~ dunif(0,100)
+  #tau_beta <- pow(sigma_beta,-2)
+  #sigma_beta ~ dunif(0,100)
 
   
   gamma[1]~dnorm(0, 0.1)
@@ -85,9 +112,9 @@ modelstat<-function()
 #kappa~dgamma(2,1/s)
 #s~dchisqr(2)
 #alpha~dnorm(0,0.1)
-mu_kappa~dnorm(0,0.1)
-mu_alpha~dnorm(0,0.1)
-beta <-1#~dgamma(0.1, 0.1)
+#mu_kappa~dnorm(0,0.1)
+#mu_alpha~dnorm(0,0.1)
+#beta <-1#~dgamma(0.1, 0.1)
 #nu~dgamma(0.1,0.1)
 
 
@@ -96,7 +123,7 @@ beta <-1#~dgamma(0.1, 0.1)
     for (t in 1:max(popAge)){
 
     #Dens_pred[pop,t]<- exp(gamma[1]+gamma[2]*(t - mean(popAge[])) + epsilonD[pop])
-    Dens_pred[pop,t] <-  kappa[pop] / (1+alpha[pop]*exp(-log(t)))
+    Dens_pred[pop,t] <-  kappa[pop] / (1+alpha[pop]*exp(beta[pop]*log(t)))
 
     P_pred[pop,t]<- ilogit(delta[1]+ delta[2]*t + epsilonP[pop])#+ (pow(t,delta[3])))
     #muP[t,2]<- ilogit(delta[1]+ delta[2]) #+ (pow(t,delta[3])))
@@ -107,7 +134,7 @@ beta <-1#~dgamma(0.1, 0.1)
 # Over all populations
 for (t in 1:max(popAge)){
   #Dens_pred_all[t]<- exp(gamma[1]+gamma[2]*(t - mean(popAge[])))
-    Dens_pred_all[t] <-  mu_kappa / (1+mu_alpha*exp(-log(t)))
+    Dens_pred_all[t] <-  mu_kappa / (1+mu_alpha*exp(-1*log(t)))
 } # end loop t
 
 }#end model
