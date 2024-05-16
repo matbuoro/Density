@@ -7,6 +7,7 @@ data2$age <- 2
 data<-rbind(data1,data2)
 table(data$basin)
 
+length(unique((data$basin)))
 
 # Remove area too large
 data$area <- gsub(",", ".", data$area) # convert comma to dot
@@ -33,7 +34,7 @@ data$month<-as.numeric(substr(data$date, 4, 5))
 #data$jday<-mydates$yday # julian day
 
 
-
+aggregate(PE~year+basin, data=data, FUN=length)
 
 #c() ouvre chaine de caract?res
 #vecteur uncoldate assigne ann?e de colonisation pour chaque bassin versant
@@ -197,6 +198,7 @@ for (i in 1:nrow(data)) {
 data$coldate<-as.numeric(coldate)
 data$uncoldate<-as.numeric(uncoldate)
 doubtDate<-(data$coldate)-(data$uncoldate) # the span of colonization date uncertainty. We may want to draw into this if we are to account for that source of variation. 
+hist(doubtDate)
 
 #here we define the age of sampling with regard to the population age. 
 data$popAge<-as.numeric(data$year)-as.numeric(data$coldate)
@@ -219,7 +221,7 @@ data$Age_cohort <- ifelse(data$month ==12, data$popAge+1, data$popAge)
 
 #here we filter to obtain only sites that were sampled in DL1 / DL2. 
 #nouveau dataset dans les NA
-data<-subset(data, !is.na(DL1) & !(is.na(DL2)) ) #garde seulement les deux passages
+data<-subset(data, (!is.na(DL1) & !(is.na(DL2))) | ((!is.na(P1)) & !(is.na(P2))))# | (!is.na(PE))) #garde seulement les deux passages
 
 
 
@@ -228,24 +230,46 @@ data<-subset(data, !is.na(DL1) & !(is.na(DL2)) ) #garde seulement les deux passa
 
 ## here we place the data in a format needed for Jags. 
 
-data <- subset(data, age==1) # ##loading 1+ dataset only
+#data <- subset(data, age==1) # ##loading 1+ dataset only
 #note that these IDs are not the same between different datasets: if we want to merge resutls, we will have to use basin names. 
 data$riverID<-unclass(factor(data$basin)) #unclass prend le rang de chaque cat?gorie. Basin transform?e en facteur: variable cat?gorielle
 #data$siteID<-rowid(data$XYZ,factor(data$riverID))  # this is the sampling site ID WITHIN the riverID. Useful for hierarchization. #rowid rang ? l'int?rieur d'un facteur, pour site dans rivi?re
+# Retrieve levels of the factor
+factor_levels <- levels(factor(data$basin))
+# Recode factor based on position
+recode_factor <- factor(factor(data$basin), labels = seq_along(factor_levels))
+
+maxPopAge=NULL
+for (pop in 1:max(data$riverID)){
+maxPopAge[pop] <- max(data$Age_cohort[recode_factor==pop])
+}
+
 
 dataToJags <- list(                                               #liste aggr?g?e d'objets
   n = nrow(data),  
-  #AgeFish=data$age,                                             #N fait n de long avec r?p?titions NA
+  AgeFish=data$age,                                             #N fait n de long avec r?p?titions NA
   #Nriver= length(unique(data$riverID)),
   DL1 = data$DL1,						#D1 issu de proba de capture binomial
   DL2 = data$DL2,
+  #DL3 = data$DL3,
+  P1 = data$P1, # Petersen
+P2 = data$P2, # Petersen
+#PE = data$PE, # PE
   #n = rep(NA,nrow(data)), 
   area = data$area,  # we work in log here
-  riverID = data$riverID,
+  riverID = as.integer(recode_factor),
   #vec_riverID=unique(data$riverID),
   #siteID = data$siteID,  
   year= data$year - min(data$year)+1,   # it is the year of sampling
-  popAge=data$Age_cohort#,  # it is the population age /!\ but by cohort gb+mb 27032024
+  popAge=data$Age_cohort,  # it is the population age /!\ but by cohort gb+mb 27032024
   #max_year = max(data$Year_cohort)
+  t0= doubtDate+1,
+  coldate=data$coldate,
+  maxPopAge=maxPopAge
 )
 
+
+
+
+
+#DL1 <- array(, dim=c())
