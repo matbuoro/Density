@@ -46,7 +46,9 @@ inits<-function(){
     sigmaP=1,
     kappa = runif(max(dataToJags$riverID), 10,30),
     #sigma_alpha=10,
-    area=area_inits
+    area=area_inits,
+    tq=rep(10,max(dataToJags$riverID)),
+    beta=rep(30,max(dataToJags$riverID))
   )
 }
 
@@ -57,6 +59,7 @@ inits<-function(){
 
 parameters <-c(
   #"P","p","d",
+  "tq","d",
   "s","theta",
   "pCol",
   "kappa","alpha","beta",

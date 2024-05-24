@@ -22,26 +22,31 @@ modelstat<-function(){
 
     #ancien prior = hyperparamètres
     #p[year[j]]~dbeta(2,2)
-    lambda[j]<-(d[j]*(area[j]/100)) # number of fish / 100m2
-    #d[j]~dgamma(1,1)
-    #d[j]~dnorm(muD[year[j]], tauD[year[j]]);T(0,)#gamma défini positif 
-    #d[j]~dlnorm(log_muD[j], tauD)
+    lambda[j]<-(dens[j]*(area[j]/100)) # number of fish / 100m2
+    #dens[j]~dgamma(1,1)
+    #dens[j]~dnorm(muD[year[j]], tauD[year[j]]);T(0,)#gamma défini positif 
+    #dens[j]~dlnorm(log_muD[j], tauD)
     #log_muD[j] <- gamma[1]+gamma[2]*(popAge[j] - mean(popAge[])) + epsilonD[riverID[j]] # (pow(year[j],gamma[2]))#+(pow(year[j],gamma[2+AGE[j]]))
     #log_muD[j] <- pow(year[j] - mean(year[]),gamma[2])# (pow(year[j],gamma[2]))#+(pow(year[j],gamma[2+AGE[j]]))
+    dens[j]~dnorm(muD[riverID[j]], tauD)
 
    ## Generalized Logistic density function
-    d[j]~dnorm(muD[j], tauD)
+    #dens[j]~dnorm(muD[j], tauD)
     #muD[j] <- A + (Kappa-A) / pow(C+Q*exp(-B*popAge[j]), 1/v)
     #muD[j] <- Kappa * (1 / pow(1+Q*exp(-B*popAge[j]), 1/nu))
     #log_muD[j] <- log(muD[j])
     #muD[j] <- kappa[riverID[j]] / (1+exp(-beta[riverID[j]]*log(popAge[j])))
-    muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(-beta[riverID[j]]*(popAge[j])))#+(t0[j]-1))))
+    #muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(beta[riverID[j]]*(year_capture[j])))#+(t0[j]-1))))
     #muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(-beta[riverID[j]]*(year[j]-1962)))
     #muD[j] <- theta[3] / (1+exp(theta[1]+theta[2]*(popAge[j]-t0)))
 
  #muD[j] <- (kappa[riverID[j]]* alpha[riverID[j]]) / (alpha[riverID[j]] + (kappa[riverID[j]] - alpha[riverID[j]])*pow(beta[riverID[j]], -popAge[j]))
 
-    t0[j]~dcat(pCol[1:10])
+# Berverton-Holt
+#muD[j] <- (kappa[riverID[j]]* pow(year_capture[j]+1, d[riverID[j]])) / (pow(beta[riverID[j]], d[riverID[j]]) + pow(year_capture[j]+1, d[riverID[j]]))
+
+
+    #t0[j]~dcat(pCol[1:10])
 
     ## Proba capture
     logit(p[j]) <- logit_p[j]
@@ -51,11 +56,13 @@ modelstat<-function(){
     # likelihood for  the area. NB: not clear trend as a function of time or population age so don't bother. Like wise for river effect. 
     area[j] ~ dlnorm(muS[riverID[j]],tauS);T(,2500)
   }#end boucle
+
+
   
-  pCol[1:10] ~ ddirch(a[1:10])
-  for (i2 in 1:10){
-    a[i2]<-1/10
-  }
+  #pCol[1:10] ~ ddirch(a[1:10])
+  #for (i2 in 1:10){
+  #  a[i2]<-1/10
+  #}
   #t0 <- 0
   #Ymax <- kappa
   #Ymin <- kappa / (1 + alpha)
@@ -70,18 +77,26 @@ modelstat<-function(){
   #theta[2] ~ dnorm(0, 0.001)
   #theta[3] ~ dnorm(0, 0.001);T(0,)
 
+   q <- 0.25
 # PRIOR
   for (i in 1:max(riverID)){
+
+    muD[i]~dnorm(0, 0.1)#~dgamma(1, 1)
     muS[i]~dnorm(0, 0.1)#~dgamma(1, 1)
 
     #epsilonD[i]~dnorm(0,tau_epsilon[1]) #random effect for density
     epsilonP[i]~dnorm(0,tau_epsilon[2]) #random effect for capture probability
 
     #kappa[i] ~dgamma(a[1],b[1])#<- mu_kappa #~dlnorm(0, 0.1)
-    kappa[i] ~dgamma(20,1)
-    alpha[i] <- mu_alpha#~dgamma(1, 1)#~dgamma(1,1/s[2])
-    beta[i] ~ dunif(0, 10)#~dgamma(1, 1)#~dgamma(1,1/s[3])
+    kappa[i]~dgamma(1,1)
+    alpha[i] ~dexp(1)
+    beta[i] ~dgamma(1, 1)#~dgamma(1,1/s[3])
 
+    #d[i]~dexp(1)
+ 
+ 
+    #d[i] <- (log(q) + log(beta[i]) -log(tq[i]))/(log(1-q))
+    #tq[i] ~dunif(1,20)
     #kappa[i] <- theta[3]
     #alpha[i] <- theta[1]
     #beta[i] <- 1#theta[2]
@@ -175,7 +190,9 @@ modelstat<-function(){
       for (t in 1:(maxPopAge[pop]+1)){
     #Dens_pred[pop,t]<- exp(gamma[1]+gamma[2]*(t - mean(popAge[])) + epsilonD[pop])
     #Dens_pred[pop,t] <-  kappa[pop] / (1+exp(-beta[pop]*log(t)))
-    Dens_pred[pop,t] <-  kappa[pop] / (1+alpha[pop]*exp(-beta[pop]*(t-1)))
+    #Dens_pred[pop,t] <-  kappa[pop] / (1+alpha[pop]*exp(beta[pop]*(t-1)))
+
+    Dens_pred[pop,t] <- ((kappa[pop]* pow(t, d[pop])) / (pow(beta[pop], d[pop]) + pow(t, d[pop])))
 
     P_pred[pop,t]<- ilogit(delta[1]+ delta[2]*t + epsilonP[pop])#+ (pow(t,delta[3])))
     #muP[t,2]<- ilogit(delta[1]+ delta[2]) #+ (pow(t,delta[3])))

@@ -211,8 +211,8 @@ data <- subset(data, month %in% c(12,1,2,3))
 
 
 # Cohort year: les captures de decembre sont attribuées à l'année suivante
-#data$Year_code <- data$year-min(data$year)+1 # recode year
-#data$Year_cohort <- ifelse(data$month ==12, data$Year_code+1, data$Year_code)
+data$Year_code <- data$year-min(data$year)+1 # recode year
+data$Year_cohort <- ifelse(data$month ==12, data$Year_code+1, data$Year_code)
 data$Age_cohort <- ifelse(data$month ==12, data$popAge+1, data$popAge)
 
 
@@ -239,11 +239,16 @@ factor_levels <- levels(factor(data$basin))
 # Recode factor based on position
 recode_factor <- factor(factor(data$basin), labels = seq_along(factor_levels))
 
-maxPopAge=NULL
+maxPopAge=firstCapture=NULL
 for (pop in 1:max(data$riverID)){
 maxPopAge[pop] <- max(data$Age_cohort[recode_factor==pop])
+firstCapture[pop] <- min(data$Year_cohort[recode_factor==pop])
 }
 
+year_capture=NULL
+for (i in 1:nrow(data)){
+ data$year_capture[i]=data$Year_cohort[i] - firstCapture[data$riverID[i]]
+}
 
 dataToJags <- list(                                               #liste aggr?g?e d'objets
   n = nrow(data),  
@@ -263,6 +268,7 @@ P2 = data$P2, # Petersen
   year= data$year - min(data$year)+1,   # it is the year of sampling
   popAge=data$Age_cohort,  # it is the population age /!\ but by cohort gb+mb 27032024
   #max_year = max(data$Year_cohort)
+  year_capture=data$year_capture,
   t0= doubtDate+1,
   coldate=data$coldate,
   maxPopAge=maxPopAge
