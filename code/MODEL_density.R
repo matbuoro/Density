@@ -28,7 +28,7 @@ modelstat<-function(){
     #dens[j]~dlnorm(log_muD[j], tauD)
     #log_muD[j] <- gamma[1]+gamma[2]*(popAge[j] - mean(popAge[])) + epsilonD[riverID[j]] # (pow(year[j],gamma[2]))#+(pow(year[j],gamma[2+AGE[j]]))
     #log_muD[j] <- pow(year[j] - mean(year[]),gamma[2])# (pow(year[j],gamma[2]))#+(pow(year[j],gamma[2+AGE[j]]))
-    dens[j]~dnorm(muD[riverID[j]], tauD)
+    dens[j]~dlnorm(log_muD[riverID[j], popAge[j]+1], tauD)
 
    ## Generalized Logistic density function
     #dens[j]~dnorm(muD[j], tauD)
@@ -81,7 +81,7 @@ modelstat<-function(){
 # PRIOR
   for (i in 1:max(riverID)){
 
-    muD[i]~dnorm(0, 0.1)#~dgamma(1, 1)
+    #muD[i]~dnorm(0, 0.1)#~dgamma(1, 1)
     muS[i]~dnorm(0, 0.1)#~dgamma(1, 1)
 
     #epsilonD[i]~dnorm(0,tau_epsilon[1]) #random effect for density
@@ -188,11 +188,15 @@ modelstat<-function(){
   for (pop in 1:max(riverID)){
     #for (t in 1:max(popAge)){
       for (t in 1:(maxPopAge[pop]+1)){
+
+  log_muD[pop, t]~dnorm(0, 0.001)
+  muD[pop, t] <- exp(log_muD[pop, t])
+
     #Dens_pred[pop,t]<- exp(gamma[1]+gamma[2]*(t - mean(popAge[])) + epsilonD[pop])
     #Dens_pred[pop,t] <-  kappa[pop] / (1+exp(-beta[pop]*log(t)))
     #Dens_pred[pop,t] <-  kappa[pop] / (1+alpha[pop]*exp(beta[pop]*(t-1)))
 
-    Dens_pred[pop,t] <- ((kappa[pop]* pow(t, d[pop])) / (pow(beta[pop], d[pop]) + pow(t, d[pop])))
+    #Dens_pred[pop,t] <- ((kappa[pop]* pow(t, d[pop])) / (pow(beta[pop], d[pop]) + pow(t, d[pop])))
 
     P_pred[pop,t]<- ilogit(delta[1]+ delta[2]*t + epsilonP[pop])#+ (pow(t,delta[3])))
     #muP[t,2]<- ilogit(delta[1]+ delta[2]) #+ (pow(t,delta[3])))

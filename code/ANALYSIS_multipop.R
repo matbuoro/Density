@@ -155,6 +155,8 @@ caterplot(jagsfit,paste0("epsilonP[",1:33,"]"), reorder = FALSE, horizontal=FALS
 
 caterplot(jagsfit,paste0("Dens_pred_all[",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title("All populations")
 
+caterplot(jagsfit,paste0("muD[17,",1:(dataToJags$maxPopAge[17]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[17]));title(levels(factor(data$basin))[28])
+
 
 par(mfrow=c(2,2))
 #caterplot(jagsfit,paste0("muD[1,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[pop])
@@ -172,5 +174,17 @@ caterplot(jagsfit,paste0("Dens_pred[28,",1:(dataToJags$maxPopAge[28]),"]"), reor
 
 dev.off()
 
+muD <- (jagsfit$BUGSoutput$sims.list$muD)
+pop17 <- muD[,17,1:(dataToJags$maxPopAge[17])] # uniquement pop 17
+tmp <- 1:(dataToJags$maxPopAge[17])
+medians <- apply(pop17,2,median)
+q2.5 <- apply(pop17,2,quantile, probs=0.025)
+q97.5 <- apply(pop17,2,quantile, probs=0.975)
+q25 <- apply(pop17,2,quantile, probs=0.25)
+q75 <- apply(pop17,2,quantile, probs=0.75)
+plot(NULL, xlim=c(1,30),ylim=c(0,30))
+points(tmp,medians)
+segments(tmp,q2.5,tmp,q97.5)
+segments(tmp,q25,tmp,q75, lwd=2)
 
 
