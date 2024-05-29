@@ -175,16 +175,20 @@ caterplot(jagsfit,paste0("Dens_pred[28,",1:(dataToJags$maxPopAge[28]),"]"), reor
 dev.off()
 
 muD <- (jagsfit$BUGSoutput$sims.list$muD)
-pop17 <- muD[,17,1:(dataToJags$maxPopAge[17])] # uniquement pop 17
-tmp <- 1:(dataToJags$maxPopAge[17])
-medians <- apply(pop17,2,median)
-q2.5 <- apply(pop17,2,quantile, probs=0.025)
-q97.5 <- apply(pop17,2,quantile, probs=0.975)
-q25 <- apply(pop17,2,quantile, probs=0.25)
-q75 <- apply(pop17,2,quantile, probs=0.75)
-plot(NULL, xlim=c(1,30),ylim=c(0,30))
-points(tmp,medians)
-segments(tmp,q2.5,tmp,q97.5)
-segments(tmp,q25,tmp,q75, lwd=2)
+pop <- 28
+mypop <- muD[,pop,1:(dataToJags$maxPopAge[pop])] # uniquement pop 17
+
+medians <- apply(mypop,2,median)
+q2.5 <- apply(mypop,2,quantile, probs=0.025)
+q97.5 <- apply(mypop,2,quantile, probs=0.975)
+q25 <- apply(mypop,2,quantile, probs=0.25)
+q75 <- apply(mypop,2,quantile, probs=0.75)
+
+#observedPop <- 1:(dataToJags$maxPopAge[pop]) # all years
+observedPop <- c(12,42,43)
+plot(NULL, xlim=c(1,50),ylim=c(0,30), main=levels(factor(data$basin))[pop])
+points(observedPop,medians[observedPop], pch=16)
+segments(observedPop,q2.5[observedPop],observedPop,q97.5[observedPop])
+segments(observedPop,q25[observedPop],observedPop,q75[observedPop], lwd=2)
 
 
