@@ -198,7 +198,7 @@ for (i in 1:nrow(data)) {
 data$coldate<-as.numeric(coldate)
 data$uncoldate<-as.numeric(uncoldate)
 doubtDate<-(data$coldate)-(data$uncoldate) # the span of colonization date uncertainty. We may want to draw into this if we are to account for that source of variation. 
-hist(doubtDate)
+#hist(doubtDate)
 
 #here we define the age of sampling with regard to the population age. 
 data$popAge<-as.numeric(data$year)-as.numeric(data$coldate)

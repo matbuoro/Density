@@ -23,18 +23,24 @@ modelstat<-function(){
     #ancien prior = hyperparamètres
     #p[year[j]]~dbeta(2,2)
     lambda[j]<-(dens[j]*(area[j]/100)) # number of fish / 100m2
-    #dens[j]~dgamma(1,1)
+    
+    dens[j]~dlnorm(log_muD[j], tauD)
+    #dens[j]~dlnorm(log_muD[riverID[j], popAge[j]+1], tauD)
+    #dens[j]~dgamma(b[j],psi)
+
     #dens[j]~dnorm(muD[year[j]], tauD[year[j]]);T(0,)#gamma défini positif 
     #dens[j]~dlnorm(log_muD[j], tauD)
+    #log_muD[j] <- gamma[1]+gamma[2]*(popAge[j]) + epsilonD[riverID[j]]
+    #log_muD[j] <- gamma[1]+gamma[2]*(popAge[j]) + epsilonD[riverID[j]] # (pow(year[j],gamma[2]))#+(pow(year[j],gamma[2+AGE[j]]))
     #log_muD[j] <- gamma[1]+gamma[2]*(popAge[j] - mean(popAge[])) + epsilonD[riverID[j]] # (pow(year[j],gamma[2]))#+(pow(year[j],gamma[2+AGE[j]]))
-    #log_muD[j] <- pow(year[j] - mean(year[]),gamma[2])# (pow(year[j],gamma[2]))#+(pow(year[j],gamma[2+AGE[j]]))
-    dens[j]~dlnorm(log_muD[riverID[j], popAge[j]+1], tauD)
+      #log_muD[j] <- pow(year[j] - mean(year[]),gamma[2])# (pow(year[j],gamma[2]))#+(pow(year[j],gamma[2+AGE[j]]))
+
 
    ## Generalized Logistic density function
     #dens[j]~dnorm(muD[j], tauD)
     #muD[j] <- A + (Kappa-A) / pow(C+Q*exp(-B*popAge[j]), 1/v)
     #muD[j] <- Kappa * (1 / pow(1+Q*exp(-B*popAge[j]), 1/nu))
-    #log_muD[j] <- log(muD[j])
+    log_muD[j] <- log(muD[j])
     #muD[j] <- kappa[riverID[j]] / (1+exp(-beta[riverID[j]]*log(popAge[j])))
     #muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(beta[riverID[j]]*(year_capture[j])))#+(t0[j]-1))))
     #muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(-beta[riverID[j]]*(year[j]-1962)))
@@ -43,7 +49,7 @@ modelstat<-function(){
  #muD[j] <- (kappa[riverID[j]]* alpha[riverID[j]]) / (alpha[riverID[j]] + (kappa[riverID[j]] - alpha[riverID[j]])*pow(beta[riverID[j]], -popAge[j]))
 
 # Berverton-Holt
-#muD[j] <- (kappa[riverID[j]]* pow(year_capture[j]+1, d[riverID[j]])) / (pow(beta[riverID[j]], d[riverID[j]]) + pow(year_capture[j]+1, d[riverID[j]]))
+  muD[j] <- (kappa[riverID[j]]* pow(year_capture[j]+1, d[riverID[j]])) / (pow(beta[riverID[j]], d[riverID[j]]) + pow(year_capture[j]+1, d[riverID[j]]))
 
 
     #t0[j]~dcat(pCol[1:10])
@@ -51,7 +57,8 @@ modelstat<-function(){
     ## Proba capture
     logit(p[j]) <- logit_p[j]
     logit_p[j]~dnorm(log_muP[j], tauP)
-    log_muP[j] <- delta[1]+ delta[2]*year[j] + epsilonP[riverID[j]] # /!\ we consider year effect instead of age because protocol and sampling effort could have change over time.
+    log_muP[j] <- delta[1]+  epsilonP[riverID[j]] # /!\ we consider year effect instead of age because protocol and sampling effort could have change over time.
+    #log_muP[j] <- delta[1]+ delta[2]*year[j] + epsilonP[riverID[j]] # /!\ we consider year effect instead of age because protocol and sampling effort could have change over time.
     
     # likelihood for  the area. NB: not clear trend as a function of time or population age so don't bother. Like wise for river effect. 
     area[j] ~ dlnorm(muS[riverID[j]],tauS);T(,2500)
@@ -84,19 +91,20 @@ modelstat<-function(){
     #muD[i]~dnorm(0, 0.1)#~dgamma(1, 1)
     muS[i]~dnorm(0, 0.1)#~dgamma(1, 1)
 
-    #epsilonD[i]~dnorm(0,tau_epsilon[1]) #random effect for density
+    epsilonD[i]~dnorm(0,tau_epsilon[1]) #random effect for density
     epsilonP[i]~dnorm(0,tau_epsilon[2]) #random effect for capture probability
 
-    #kappa[i] ~dgamma(a[1],b[1])#<- mu_kappa #~dlnorm(0, 0.1)
-    kappa[i]~dgamma(1,1)
-    alpha[i] ~dexp(1)
-    beta[i] ~dgamma(1, 1)#~dgamma(1,1/s[3])
+    kappa[i]~dnorm(mu_kappa, pow(sigma_kappa,-2));T(0,)
+    #kappa[i] <- (k_prior*49)+1
+    #alpha[i] ~dexp(1)
+    beta[i] ~dexp(1)
 
     #d[i]~dexp(1)
  
  
-    #d[i] <- (log(q) + log(beta[i]) -log(tq[i]))/(log(1-q))
-    #tq[i] ~dunif(1,20)
+    #d[i] <- (log(1-q))/(log(q) + log(beta[i]) -log(tq[i]))
+    d[i]<-D
+    tq[i] ~dunif(1,20)
     #kappa[i] <- theta[3]
     #alpha[i] <- theta[1]
     #beta[i] <- 1#theta[2]
@@ -134,11 +142,14 @@ modelstat<-function(){
   #  mu_alpha~dgamma(2,1/s[2])
   #  s[2]~dchisqr(2)
   mu_beta ~ dunif(0, 20)
-  mu_kappa ~ dunif(10,30)
+  mu_kappa ~ dunif(5,30)
   #mu_kappa~dgamma(2,1/s[1])
   #s[1]~dchisqr(2)
   #mu_beta~dgamma(2,1/s[2])
   #s[2]~dchisqr(2)
+
+  k_prior~dbeta(2,2)
+  D~dbeta(2,2)
 
   tau_epsilon[1] <- pow(sigma_eps[1],-2)
   sigma_eps[1] ~ dunif(0,10)
@@ -147,13 +158,13 @@ modelstat<-function(){
   #tau_alpha <- pow(sigma_alpha,-2)
   #sigma_alpha ~ dunif(0,100)
   #tau_kappa <- pow(sigma_kappa,-2)#
-  #sigma_kappa ~ dunif(0,100)
+  sigma_kappa ~ dunif(0,10)
   #tau_beta <- pow(sigma_beta,-2)
   #sigma_beta ~ dunif(0,100)
 
   
-  #gamma[1]~dnorm(0, 0.1)
-  #gamma[2]~dnorm(0, 0.1)#;T(0,)#~dgamma(1, 1)
+  gamma[1]~dnorm(0, 0.1)
+  gamma[2]~dnorm(0, 0.1)#;T(0,)#~dgamma(1, 1)
   #gamma[3]~dnorm(0, 0.1)#;T(0,)#~dgamma(1, 1)
   #delta[1]~dnorm(0, 0.1)
   delta[1]<- ilogit(pmoy)
@@ -187,29 +198,34 @@ modelstat<-function(){
  # PREDICTION
   for (pop in 1:max(riverID)){
     #for (t in 1:max(popAge)){
-      for (t in 1:(maxPopAge[pop]+1)){
+    
+    P_pred[pop]<- ilogit(delta[1]+ epsilonP[pop])#+ (pow(t,delta[3])))
+    
+     for (t in 1:(maxPopAge[pop]+1)){
 
-  log_muD[pop, t]~dnorm(0, 0.001)
-  muD[pop, t] <- exp(log_muD[pop, t])
+  #log_muD[pop, t]~dnorm(0, 0.001)
+  #muD[pop, t] <- exp(log_muD[pop, t])
 
+    #Dens_pred[pop,t]<- exp(gamma[1]+gamma[2]*(t) + epsilonD[pop])
     #Dens_pred[pop,t]<- exp(gamma[1]+gamma[2]*(t - mean(popAge[])) + epsilonD[pop])
     #Dens_pred[pop,t] <-  kappa[pop] / (1+exp(-beta[pop]*log(t)))
     #Dens_pred[pop,t] <-  kappa[pop] / (1+alpha[pop]*exp(beta[pop]*(t-1)))
 
-    #Dens_pred[pop,t] <- ((kappa[pop]* pow(t, d[pop])) / (pow(beta[pop], d[pop]) + pow(t, d[pop])))
+    Dens_pred[pop,t] <- ((kappa[pop]* pow(t, d[pop])) / (pow(beta[pop], d[pop]) + pow(t, d[pop])))
 
-    P_pred[pop,t]<- ilogit(delta[1]+ delta[2]*t + epsilonP[pop])#+ (pow(t,delta[3])))
+    #P_pred[pop,t]<- ilogit(delta[1]+  epsilonP[pop])#+ (pow(t,delta[3])))
+    #P_pred[pop,t]<- ilogit(delta[1]+ delta[2]*t + epsilonP[pop])#+ (pow(t,delta[3])))
     #muP[t,2]<- ilogit(delta[1]+ delta[2]) #+ (pow(t,delta[3])))
 
-  } # end loop t
+ } # end loop t
   } # end loop pop
 
 # Over all populations
-for (t in 1:max(popAge)){
+#for (t in 1:max(popAge)){
   #Dens_pred_all[t]<- exp(gamma[1]+gamma[2]*(t - mean(popAge[])))
     #Dens_pred_all[t] <-  mu_kappa / (1+exp(-mu_beta*log(t)))
     #Dens_pred_all[t] <- theta[3] / (1+ exp(theta[1]+theta[2]*(t-t0)))
-    P_pred_all[t]<- ilogit(delta[1]+ delta[2]*t)
-} # end loop t
+    #P_pred_all[t]<- ilogit(delta[1])#+ delta[2]*t)
+#} # end loop t
 
 } #end model

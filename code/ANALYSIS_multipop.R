@@ -44,11 +44,12 @@ inits<-function(){
     #mu_alpha=2,
     #sigmaD=0.1,
     sigmaP=1,
-    kappa = runif(max(dataToJags$riverID), 10,30),
+    k_prior=0.5, D = 0.99,
+    #kappa = runif(max(dataToJags$riverID), 10,30),
     #sigma_alpha=10,
     area=area_inits,
-    tq=rep(10,max(dataToJags$riverID)),
-    beta=rep(30,max(dataToJags$riverID))
+    tq=rep(10,max(dataToJags$riverID))#,
+    #beta=rep(0,max(dataToJags$riverID))
   )
 }
 
@@ -62,6 +63,7 @@ parameters <-c(
   "tq","d",
   "s","theta",
   "pCol",
+  "k_prior","D",
   "kappa","alpha","beta",
   "mu_alpha","mu_kappa","mu_beta",
   "sigma_alpha","sigma_kappa","sigma_beta",
@@ -84,7 +86,7 @@ jagsfit <- jags(dataToJags,
                 parameters.to.save = parameters,  
                 n.chains = 2,  # Number of chains to run.
                 inits = inits,  # initial values for hyperparameters
-                n.iter = 5000*1,    # 10000 MCMC iterations + si converge pas
+                n.iter = 10000*1,    # 10000 MCMC iterations + si converge pas
                 n.burnin = 2000,   # discard first X iterations
                 n.thin = 1
                 ) # keep every X iterations //ex: garde tous les 100 itérations
@@ -117,11 +119,15 @@ denplot(jagsfit, parms = c("s")) #distrib posteriori marginales
 traplot(jagsfit, parms = c("pCol")) #distrib posteriori marginales
 caterplot(jagsfit,"pCol", reorder = FALSE, horizontal=FALSE)#
 
+
+traplot(jagsfit, parms = c("k_prior")) #distrib posteriori marginales
+traplot(jagsfit, parms = c("D")) #distrib posteriori marginales
+
 traplot(jagsfit, parms = c("delta")) #distrib posteriori marginales
-denplot(jagsfit, parms = c("beta")) #distrib posteriori marginales
+traplot(jagsfit, parms = c("beta")) #distrib posteriori marginales
 caterplot(jagsfit, parms = c("delta")) #distrib posteriori marginales
 caterplot(jagsfit, parms = c("delta[2]")) #distrib posteriori marginales
-
+traplot(jagsfit, parms = c("gamma")) #distrib posteriori marginales
 
 traplot(jagsfit, parms = c("mu_kappa")) #distrib posteriori marginales
 traplot(jagsfit, parms = c("kappa"));#distrib posteriori marginales
@@ -148,10 +154,13 @@ caterplot(jagsfit,"area", reorder = FALSE, horizontal=FALSE);points(data$area)
 #caterplot(jagsfit, "N", reorder = FALSE, horizontal=FALSE);#points(N) #spécifier N
 #caterplot(jagsfit,paste0("epsilonD[",1:32,"]"), reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));#points(0.4)
 
-#caterplot(jagsfit,paste0("P_pred[21,",1:32,"]"), reorder = FALSE, horizontal=FALSE);title(levels(factor(data$basin))[21])
+caterplot(jagsfit,paste0("P_pred[",1:33,"]"), reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin))); title("Probabilités de capture")
+
+caterplot(jagsfit,paste0("P_pred[28,",1:32,"]"), reorder = FALSE, horizontal=FALSE);title(levels(factor(data$basin))[28])
 caterplot(jagsfit,paste0("P_pred_all[",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title("All populations")
 
 caterplot(jagsfit,paste0("epsilonP[",1:33,"]"), reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));#points(0.4)
+caterplot(jagsfit,paste0("epsilonD[",1:33,"]"), reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));#points(0.4)
 
 caterplot(jagsfit,paste0("Dens_pred_all[",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title("All populations")
 
@@ -168,11 +177,21 @@ caterplot(jagsfit,paste0("Dens_pred[28,",1:(dataToJags$maxPopAge[28]),"]"), reor
 #caterplot(jagsfit,paste0("Dens_pred[10,",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title(levels(factor(data$basin))[10])
 #caterplot(jagsfit,paste0("Dens_pred[27,",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title(levels(factor(data$basin))[27])
 #caterplot(jagsfit,paste0("Dens_pred[21,",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title(levels(factor(data$basin))[21])
-#
 
 
 
 dev.off()
+
+
+library(bayesplot)
+posterior <- jagsfit$BUGSoutput$sims.matrix
+# Convert MCMC samples to data frame
+#posterior <- as.data.frame(as.mcmc(do.call(rbind, mcmc_samples)))
+mcmc_pairs(posterior, pars = c("delta[1]","delta[2]", "gamma[1]", "gamma[2]"),off_diag_args = list(size = 1.5))
+
+
+
+
 
 muD <- (jagsfit$BUGSoutput$sims.list$muD)
 pop <- 28
