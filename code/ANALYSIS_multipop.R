@@ -29,7 +29,6 @@ N_inits[i] <- ceiling(sum(c(dataToJags$DL1[i],dataToJags$DL2[i],dataToJags$DL3[i
   ,dataToJags$P1[i],dataToJags$P2[i]
  # ,dataToJags$PE[i]
   ), na.rm = TRUE)/0.7)
-}
 
 inits<-function(){
   list(
@@ -60,7 +59,7 @@ inits<-function(){
 
 parameters <-c(
   #"P","p","d",
-  "tq","d",
+  "tq","d","dens",
   "s","theta",
   "pCol",
   "k_prior","D",
@@ -125,7 +124,7 @@ traplot(jagsfit, parms = c("D")) #distrib posteriori marginales
 
 traplot(jagsfit, parms = c("delta")) #distrib posteriori marginales
 traplot(jagsfit, parms = c("beta")) #distrib posteriori marginales
-caterplot(jagsfit, parms = c("delta")) #distrib posteriori marginales
+caterplot(jagsfit, parms = c("delta[1]")) #distrib posteriori marginales
 caterplot(jagsfit, parms = c("delta[2]")) #distrib posteriori marginales
 traplot(jagsfit, parms = c("gamma")) #distrib posteriori marginales
 
@@ -182,7 +181,6 @@ caterplot(jagsfit,paste0("Dens_pred[28,",1:(dataToJags$maxPopAge[28]),"]"), reor
 
 dev.off()
 
-
 library(bayesplot)
 posterior <- jagsfit$BUGSoutput$sims.matrix
 # Convert MCMC samples to data frame
@@ -195,7 +193,7 @@ mcmc_pairs(posterior, pars = c("delta[1]","delta[2]", "gamma[1]", "gamma[2]"),of
 
 muD <- (jagsfit$BUGSoutput$sims.list$muD)
 pop <- 28
-mypop <- muD[,pop,1:(dataToJags$maxPopAge[pop])] # uniquement pop 17
+mypop <- muD[,pop,1:(dataToJags$maxPopAge[pop])] # uniquement pop 
 
 medians <- apply(mypop,2,median)
 q2.5 <- apply(mypop,2,quantile, probs=0.025)
@@ -211,3 +209,27 @@ segments(observedPop,q2.5[observedPop],observedPop,q97.5[observedPop])
 segments(observedPop,q25[observedPop],observedPop,q75[observedPop], lwd=2)
 
 
+#Estimations de densités sur base des données 
+dens <- (jagsfit$BUGSoutput$sims.list$dens)
+pop <- 22
+densPop<-dens[,which(dataToJags$riverID==pop)]#Toutes les estimations de densité (16000 lignes) pour la pop sélectionnée
+
+medians <- apply(densPop,2,median)
+q2.5 <- apply(densPop,2,quantile, probs=0.025)
+q97.5 <- apply(densPop,2,quantile, probs=0.975)
+q25 <- apply(densPop,2,quantile, probs=0.25)
+q75 <- apply(densPop,2,quantile, probs=0.75)
+
+observedPop <- c(unique(dataToJags$year[which(dataToJags$riverID==pop)]))
+plot(NULL, xlim=c(1,50),ylim=c(0,100), ylab="Densité/100 m^2", xlab="popAge",main=levels(factor(data$basin))[pop])
+points(observedPop,medians[observedPop], pch=16)
+segments(observedPop,q2.5[observedPop],observedPop,q97.5[observedPop])
+segments(observedPop,q25[observedPop],observedPop,q75[observedPop], lwd=2)
+
+#Estimations de densités sur base des données pour toutes les pops
+for (pop in 1:max(dataToJags$riverID)){
+densPop <- NULL
+densPop[pop] <-dens[,which(dataToJags$riverID==pop)]
+  
+  
+  }
