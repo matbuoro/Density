@@ -2,7 +2,7 @@ library(ggplot2)
 library(dplyr)
 library(hrbrthemes)
 
-setwd("C:/Users/gmbrahy/Desktop/these/Density")
+#setwd("C:/Users/gmbrahy/Desktop/these/Density")
 data1<-read.table("data/datajakdenyoung.txt",h=T)
 data1$age <- 1
 data2<-read.table("data/datajakdenadult.txt",h=T)
