@@ -3,13 +3,15 @@ library(dplyr)
 library(hrbrthemes)
 
 #setwd("C:/Users/gmbrahy/Desktop/these/Density")
-data1<-read.table("data/datajakdenyoung.txt",h=T)
-data1$age <- 1
-data2<-read.table("data/datajakdenadult.txt",h=T)
-data2$age <- 2
-data<-rbind(data1,data2)
-data$area <- gsub(",", ".", data$area)
-data$area <- as.numeric(data$area)
+# data1<-read.table("data/datajakdenyoung.txt",h=T)
+# data1$age <- 1
+# data2<-read.table("data/datajakdenadult.txt",h=T)
+# data2$age <- 2
+# data<-rbind(data1,data2)
+data<-read.table("data/dataoctobre.txt",h=T, fill=TRUE)
+#data$area <- gsub(",", ".", data$area)
+#data$area <- as.numeric(data$area)
+data$estArea <- as.numeric(data$estArea)
 data$year<-as.numeric(substr(data$date, 7, 10))
 data$month<-as.numeric(substr(data$date, 4, 5)) 
 
@@ -81,7 +83,16 @@ ggplot(Norvegienne, aes(x=as.factor(year), y=area)) +
 barplot(height=Studer$area, names=Studer$year,main="Aire par année", xlab="Année d'échantillonnage", ylab="Area (m^2)", col="blue")
 
 
-#Visualisation des données - boucle sur bassins
+
+
+
+
+
+
+
+
+##Visualisation des données - boucle sur bassins
+
 library(gridExtra)
 basins <- levels(as.factor(data$basin))
 pdf(file="results/Data_exploration.pdf")
@@ -114,31 +125,51 @@ ggplot(data, aes(x = year, y = basin, shape = Method, color = abundance)) +
        y = "Bassin",
        shape = "Méthode")
 
-#Distribution des aires par méthode de pêche
-ggplot(data, aes(x = Method, y = basin, color = area)) + 
-  geom_point(size=3) +
-  scale_color_gradient(low = "#ADD8E6", high = "#00008B") +
-  theme_minimal() +
-  labs(title = "Heatmap des aires par bassin et méthode de pêche", 
-       x = "Method", 
-       y = "Basin")
 
 colours <- c("Delury"="#EE6677", "Petersen"="#56B4E9", "PE"="lightgreen")
 
-ggplot(data, aes(x=Method, y=area, colour = Method))+
+a1 <- ggplot(data, aes(x=Method, y=area, colour = Method))+
   geom_boxplot()+
   scale_colour_manual(values = colours)+
-  ggtitle("Area sampled vs sampling method")
+  ggtitle("Area vs sampling method")
+
+a2 <- ggplot(data, aes(x=Method, y=estArea, colour = Method))+
+  geom_boxplot()+
+  scale_colour_manual(values = colours)+
+  ggtitle(" Estimated Area vs sampling method")
+
+grid.arrange(a1, a2, nrow = 2)
 
 
 #Distribution des aires par bassin
-ggplot(data, aes(x = area, y = basin)) + 
-  geom_point(size=3) +
+a3 <- ggplot(data, aes(x = area, y = basin, color=Method)) + 
+  geom_point(size=2) +
   theme_minimal() +
   labs(title = "Area distribution per basin", 
-       x = "area", 
-       y = "Basin")
+       x = "Area", 
+       y = "Basin")+
+  theme(
+    plot.title = element_text(size = 12, hjust = 0),
+    plot.title.position = "plot",
+    axis.text.x = element_text(size = 8),  
+    axis.text.y = element_text(size = 8),
+    legend.text = element_text(size = 7)
+    )
 
+a4 <- ggplot(data, aes(x = estArea, y = basin, color=Method)) + 
+  geom_point(size=2, show.legend = FALSE) +
+  theme_minimal() +
+  labs(title = "Estimated area distribution per basin", 
+       x = "Estimated area", 
+       y = "Basin")+
+  theme(
+    plot.title = element_text(size = 12, hjust = 0),
+    plot.title.position = "plot",
+    axis.text.x = element_text(size = 8),  
+    axis.text.y = element_text(size = 8)   
+  )
+
+grid.arrange(a3, a4, ncol = 2)
 
 ggplot(data, aes(x = year, y = area, color = Method)) + 
   geom_point() +
@@ -176,11 +207,11 @@ for (basin in basins) {
          legend.text = element_text(size = 8))+
    ggtitle(paste("Abondance par année et méthode, rivière:", basin))+
    scale_colour_manual(values = colours)
- #print(p2)
- 
- p3 <-   ggplot(subset_data, aes(x=as.factor(year), y=area, colour = Method)) + 
-   geom_boxplot() + 
-   labs(x = "Year", y = "Area (m^2)") + 
+
+
+ p3 <-   ggplot(subset_data, aes(x=as.factor(year), y=area, colour = Method)) +
+   geom_jitter(position=position_jitter(width=0.3))+
+   labs(x = "Year", y = "Area (m^2)") +
    ggtitle(paste("Aire par année, rivière:", basin))+
    theme_minimal()+
    theme(axis.text.x = element_text(angle = 45, hjust = 1, size=8),
@@ -189,11 +220,38 @@ for (basin in basins) {
          legend.text = element_text(size = 8))+
    scale_colour_manual(values = colours)
    #print(p3)
+ 
+ p4 <- ggplot(subset_data, aes(x=as.factor(year), y=estArea, color = Method)) +
+  geom_jitter(position = position_jitter(width = 0.3))+
+    labs(x = "Year", y= "Estimated Area (m^2")+
+    ggtitle(paste("Aire estimée par année, rivière:", basin))+
+    theme_minimal()+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+          legend.position = c(0.92,1),
+          legend.title = element_text(size = 10),
+          legend.text = element_text(size = 8))+
+    scale_color_manual(values = colours)
+ 
+ # #pour le graphe 3 - pour visualiser séparément area et estArea - ça ne marche pas dans la boucle 
+ # data_long <- data.frame(
+ #   year = rep(subset_data$year, 2),
+ #   Value = c(subset_data$area, Studer$estArea),
+ #   Method = rep(subset_data$Method, 2),
+ #   Type = rep(c("area", "estArea"), each = nrow(subset_data))
+ # )
+ # p3 <- ggplot(data_long, aes(x = as.factor(year), y = Value, colour = Method, shape = Type)) + 
+ #   geom_jitter(position = position_jitter(width = 0.3), size = 2) +  # Ajuster la taille ici
+ #   labs(x = "Year", y = "Area (m²)", shape = "Type of Area") + 
+ #   ggtitle(paste("Aire par année, rivière:", basin)) +
+ #   theme_minimal() +
+ #   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+ #         legend.position = c(0.92, 1),
+ #         legend.title = element_text(size = 10),
+ #         legend.text = element_text(size = 8)) +
+ #   scale_colour_manual(values = colours) +
+ #   scale_shape_manual(values = c(16, 15), labels = c("Area", "Estimated Area"))  # 16 pour ronds, 15 pour carrés
 
- #aires par année
- #barplot(height=as.numeric(subset_data$area), names=as.factor(subset_data$year),main=paste("Aire par année",basin), xlab="Année d'échantillonnage", ylab="Aire (m^2)", col="blue")#ylim = 3000)
- #barplot(height=as.numeric(subset_data$abundance), names=as.factor(subset_data$month),main=paste("Abondance par mois", basin), xlab="Mois", ylab="Abondance", col="blue")#,ylim=60000)
- grid.arrange(p1, p2, p3, nrow=3)
+ grid.arrange(p1, p2, p3, p4, nrow = 4)
 }
 dev.off()
 
