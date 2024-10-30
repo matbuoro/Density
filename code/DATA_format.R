@@ -1,42 +1,8 @@
 
-###example with the 1+ dataset.
-data1<-read.table("data/datajakdenyoung.txt",h=T)
-data1$age <- 1
-data2<-read.table("data/datajakdenadult.txt",h=T)
-data2$age <- 2
+data<-read.table("data/dataoctobre.txt",h=T, fill=TRUE)
 
-##To merge the two datasets. !Check difference with datajakden
-data1<-read.table("datayoung.txt",h=TRUE)
-data2<-read.table("dataold.txt",h=TRUE)
+data <- subset(data, data$basin != "Chateau_>_Ferme_ou_Etangs")
 
-N1<- length(data1$XYZ)
-N2<- length(data2$XYZ)
-occnumber <- 0 # number of lines of N2 that are also in N2.
-isRemoved <- rep(TRUE,N2) # tags the fact that a line in N2 is in N1.
-for (i in 1:length(data1$XYZ)) {
-  bip<-which(data2$XYZ == data1$XYZ[i])
-  occnumber <- length(bip) + occnumber 
-  isRemoved[bip] <- ifelse(length(bip) > 0, FALSE, TRUE) #JL
-  #plouc<-as.numeric(data1$DL1[i]) + as.numeric(data2$DL1[bip])
-  data1$DL1[i] <- ifelse((length(bip) > 0), as.numeric(data1$DL1[i]) + as.numeric(data2$DL1[bip]) , data1$DL1[i])
-  data1$DL2[i] <- ifelse((length(bip) > 0), as.numeric(data1$DL2[i]) + as.numeric(data2$DL2[bip]) , data1$DL2[i])
-  data1$DL3[i] <- ifelse((length(bip) > 0), as.numeric(data1$DL3[i]) + as.numeric(data2$DL3[bip]) , data1$DL3[i])
-  data1$DL4[i] <- ifelse((length(bip) > 0), as.numeric(data1$DL4[i]) + as.numeric(data2$DL4[bip]) , data1$DL4[i])
-  data1$P1[i] <- ifelse((length(bip) > 0), as.numeric(data1$P1[i]) + as.numeric(data2$P1[bip]) , data1$P1[i])
-  data1$P2[i] <- ifelse((length(bip) > 0), as.numeric(data1$P2[i]) + as.numeric(data2$P2[bip]) , data1$P2[i])
-  data1$P3[i] <- ifelse((length(bip) > 0), as.numeric(data1$P3[i]) + as.numeric(data2$P3[bip]) , data1$P3[i])
-  data1$PE[i] <- ifelse((length(bip) > 0), as.numeric(data1$PE[i]) + as.numeric(data2$PE[bip]) , data1$PE[i])
-  
-  #data1$x1[i] <- ifelse((length(bip) > 0), (data2$x2[bip]) , data1$x1[i])
-  
-}
-
-#building final dataset
-#data2bis<-subset(data2, isRemoved == FALSE)#old
-data2bis<-subset(data2, isRemoved == TRUE)#new
-data<-rbind(data1,data2bis) #this is what you need.
-
-# data<-rbind(data1,data2)
 table(data$basin)
 
 length(unique((data$basin)))
