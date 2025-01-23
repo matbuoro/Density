@@ -14,7 +14,7 @@ source("code/DATA_format.R")
 str(dataToJags)
 
 ## MODEL ####
-##2. Modelisation statistique: inférence des paramètres en fonction des données simulées
+##2. Modelisation statistique: inférence des paramètres en fonction des données 
 #langage bugs
 source("code/MODEL_density.R")
 
@@ -26,8 +26,7 @@ area_inits[is.na(dataToJags$area)]<- 250
 N_inits=NULL
 for (i in 1:length(dataToJags$DL1)){
 N_inits[i] <- ceiling(sum(c(dataToJags$DL1[i],dataToJags$DL2[i],dataToJags$DL3[i]
-  ,dataToJags$P1[i],dataToJags$P2[i]
- # ,dataToJags$PE[i]
+  ,dataToJags$P1[i],dataToJags$P2[i],dataToJags$PE[i]
   ), na.rm = TRUE)/0.7)
 }
 
@@ -65,11 +64,10 @@ parameters <-c(
   "pCol",
   "k_prior","D",
   "kappa","alpha","beta",
-  "mu_alpha","mu_kappa","mu_beta",
+  "mu_alpha","mu_kappa","mu_kappa_bis","mu_beta",
   "sigma_alpha","sigma_kappa","sigma_beta",
   "Dens_pred","P_pred","Dens_pred_all","P_pred_all",
   "muD","sigmaD",
-  #"alpha","beta",
   "gamma","delta",
   #"muP",
   "sigmaP",
@@ -86,7 +84,7 @@ jagsfit <- jags(dataToJags,
                 parameters.to.save = parameters,  
                 n.chains = 2,  # Number of chains to run.
                 inits = inits,  # initial values for hyperparameters
-                n.iter = 10000*1,    # 10000 MCMC iterations + si converge pas
+                n.iter = 10000*1,   #MCMC iterations, ajouter si converge pas
                 n.burnin = 2000,   # discard first X iterations
                 n.thin = 1
                 ) # keep every X iterations //ex: garde tous les 100 itérations
@@ -120,25 +118,32 @@ traplot(jagsfit, parms = c("pCol")) #distrib posteriori marginales
 caterplot(jagsfit,"pCol", reorder = FALSE, horizontal=FALSE)#
 
 
-traplot(jagsfit, parms = c("k_prior")) #distrib posteriori marginales
-traplot(jagsfit, parms = c("D")) #distrib posteriori marginales
+traplot(jagsfit, parms = c("k_prior"))
+traplot(jagsfit, parms = c("D")) 
 
-traplot(jagsfit, parms = c("delta")) #distrib posteriori marginales
-traplot(jagsfit, parms = c("beta")) #distrib posteriori marginales
-caterplot(jagsfit, parms = c("delta[1]")) #distrib posteriori marginales
-caterplot(jagsfit, parms = c("delta[2]")) #distrib posteriori marginales
-traplot(jagsfit, parms = c("gamma")) #distrib posteriori marginales
+traplot(jagsfit, parms = c("delta")) 
+traplot(jagsfit, parms = c("beta")) 
+caterplot(jagsfit, parms = c("delta[1]")) 
+caterplot(jagsfit, parms = c("delta[2]")) 
+traplot(jagsfit, parms = c("gamma")) 
 
-traplot(jagsfit, parms = c("mu_kappa")) #distrib posteriori marginales
-traplot(jagsfit, parms = c("kappa"));#distrib posteriori marginales
-traplot(jagsfit, parms = c("alpha")) #distrib posteriori marginales
-traplot(jagsfit, parms = c("mu_beta")) #distrib posteriori marginales
+#estimation naive densite
+traplot(jagsfit, parms = c("muD[1]"))
+
+traplot(jagsfit, parms = c("mu_kappa")) 
+traplot(jagsfit, parms = c("mu_kappa_bis")) #comparaison avec paramètre aléatoire
+traplot(jagsfit, parms = c("kappa"));
+traplot(jagsfit, parms = c("alpha"))
+traplot(jagsfit, parms = c("mu_beta")) 
+#traplot(jagsfit, parms = c("muD")) 
 traplot(jagsfit, parms = c("beta")) #distrib posteriori marginales
 #traplot(jagsfit, parms = c("kappa","alpha","beta")) #distrib posteriori marginales
 
 caterplot(jagsfit,"kappa", reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));
-caterplot(jagsfit,"alpha", reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));
+caterplot(jagsfit,"d", reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));
 caterplot(jagsfit,"beta", reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));
+caterplot(jagsfit,"muD", reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));
+# caterplot(jagsfit,paste0("muD[",700:722,"]"), reorder = FALSE, horizontal=FALSE); title("Densites naives")
 
 
 
@@ -154,7 +159,7 @@ caterplot(jagsfit,"area", reorder = FALSE, horizontal=FALSE);points(data$area)
 #caterplot(jagsfit, "N", reorder = FALSE, horizontal=FALSE);#points(N) #spécifier N
 #caterplot(jagsfit,paste0("epsilonD[",1:32,"]"), reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin)));#points(0.4)
 
-caterplot(jagsfit,paste0("P_pred[",1:33,"]"), reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin))); title("Probabilités de capture")
+caterplot(jagsfit,paste0("P_pred[",1:22,"]"), reorder = FALSE, horizontal=FALSE, labels=levels(factor(data$basin))); title("Probabilités de capture")
 
 caterplot(jagsfit,paste0("P_pred[28,",1:32,"]"), reorder = FALSE, horizontal=FALSE);title(levels(factor(data$basin))[28])
 caterplot(jagsfit,paste0("P_pred_all[",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title("All populations")
@@ -169,10 +174,11 @@ caterplot(jagsfit,paste0("muD[17,",1:(dataToJags$maxPopAge[17]),"]"), reorder = 
 
 par(mfrow=c(2,2))
 #caterplot(jagsfit,paste0("muD[1,",1:60,"]"), reorder = FALSE, horizontal=FALSE, labels=1:60);title(levels(factor(data$basin))[pop])
-caterplot(jagsfit,paste0("Dens_pred[17,",1:(dataToJags$maxPopAge[17]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[17]));title(levels(factor(data$basin))[17])
-caterplot(jagsfit,paste0("Dens_pred[21,",1:(dataToJags$maxPopAge[21]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[21]));title(levels(factor(data$basin))[21])
-caterplot(jagsfit,paste0("Dens_pred[22,",1:(dataToJags$maxPopAge[22]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[22]));title(levels(factor(data$basin))[22])
-caterplot(jagsfit,paste0("Dens_pred[28,",1:(dataToJags$maxPopAge[28]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[28]));title(levels(factor(data$basin))[28])
+caterplot(jagsfit,paste0("Dens_pred[1,",1:(dataToJags$maxPopAge[1]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[1]));title(levels(factor(data$basin))[1])
+caterplot(jagsfit,paste0("Dens_pred[2,",1:(dataToJags$maxPopAge[2]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[2]));title(levels(factor(data$basin))[2])
+caterplot(jagsfit,paste0("Dens_pred[22,",1:(dataToJags$maxPopAge[5]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[5]));title(levels(factor(data$basin))[5])
+caterplot(jagsfit,paste0("Dens_pred[18,",1:(dataToJags$maxPopAge[19]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[19]));title(levels(factor(data$basin))[19])
+caterplot(jagsfit,paste0("Dens_pred[18,",1:(dataToJags$maxPopAge[15]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[15]));title(levels(factor(data$basin))[15])
 
 #caterplot(jagsfit,paste0("Dens_pred[10,",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title(levels(factor(data$basin))[10])
 #caterplot(jagsfit,paste0("Dens_pred[27,",1:max(dataToJags$popAge),"]"), reorder = FALSE, horizontal=FALSE, labels=1:max(dataToJags$popAge));title(levels(factor(data$basin))[27])
@@ -209,8 +215,14 @@ mcmc_pairs(posterior, pars = c("delta[1]","delta[2]", "gamma[1]", "gamma[2]"),of
 # segments(observedPop,q2.5[observedPop],observedPop,q97.5[observedPop])
 # segments(observedPop,q25[observedPop],observedPop,q75[observedPop], lwd=2)
 
+
+
+#plot medianes: quantiles avec valeurs de coldate/popage en x ?
+
+
 pdf(file="Observed_densityByPop.pdf")
 par(mfrow=c(1,1))
+
 #Estimations de densités sur base des données 
 dens <- (jagsfit$BUGSoutput$sims.list$dens)
 for (pop in unique(dataToJags$riverID)){
@@ -225,8 +237,8 @@ q25 <- apply(densPop,2,quantile, probs=0.25)
 q75 <- apply(densPop,2,quantile, probs=0.75)
 
 observedPop <- (dataToJags$year[ids])
-plot(NULL, xlim=c(1,50),ylim=c(0,100), ylab="Densité/100 m^2",xaxt='n', xlab="",main=levels(factor(data$basin))[pop])
-axis(1,at=1:50,labels=1970:2019, las=2, cex.txt=0.75)
+plot(NULL, xlim=c(1,56),ylim=c(0,100), ylab="Densité/100 m^2",xaxt='n', xlab="",main=levels(factor(data$basin))[pop])
+axis(1,at=1:56,labels=1970:2025, las=2, cex.txt=0.75)
 points(observedPop,medians, pch=16)
 segments(observedPop,q2.5,observedPop,q97.5)
 segments(observedPop,q25,observedPop,q75, lwd=2)

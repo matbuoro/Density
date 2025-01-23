@@ -18,9 +18,8 @@ modelstat<-function(){
     P2[j]~dbin(p[j],N[j])
 
     # 3. Electrofishing
-    #PE[j]~dbin(p[j],N[j])
+    PE[j]~dbin(p[j],N[j]) #p différente ?
 
-    #ancien prior = hyperparamètres
     #p[year[j]]~dbeta(2,2)
     lambda[j]<-(dens[j]*(area[j]/100)) # number of fish / 100m2
     
@@ -33,7 +32,7 @@ modelstat<-function(){
     #log_muD[j] <- gamma[1]+gamma[2]*(popAge[j]) + epsilonD[riverID[j]]
     #log_muD[j] <- gamma[1]+gamma[2]*(popAge[j]) + epsilonD[riverID[j]] # (pow(year[j],gamma[2]))#+(pow(year[j],gamma[2+AGE[j]]))
     #log_muD[j] <- gamma[1]+gamma[2]*(popAge[j] - mean(popAge[])) + epsilonD[riverID[j]] # (pow(year[j],gamma[2]))#+(pow(year[j],gamma[2+AGE[j]]))
-      #log_muD[j] <- pow(year[j] - mean(year[]),gamma[2])# (pow(year[j],gamma[2]))#+(pow(year[j],gamma[2+AGE[j]]))
+    #log_muD[j] <- pow(year[j] - mean(year[]),gamma[2])# (pow(year[j],gamma[2]))#+(pow(year[j],gamma[2+AGE[j]]))
 
 
    ## Generalized Logistic density function
@@ -49,8 +48,8 @@ modelstat<-function(){
  #muD[j] <- (kappa[riverID[j]]* alpha[riverID[j]]) / (alpha[riverID[j]] + (kappa[riverID[j]] - alpha[riverID[j]])*pow(beta[riverID[j]], -popAge[j]))
 
 # Berverton-Holt
-  muD[j] <- (kappa[riverID[j]]* pow(year_capture[j]+1, d[riverID[j]])) / (pow(beta[riverID[j]], d[riverID[j]]) + pow(year_capture[j]+1, d[riverID[j]]))
-
+   muD[j] <- (kappa[riverID[j]]* pow(year_capture[j]+1, d[riverID[j]])) / (pow(beta[riverID[j]], d[riverID[j]]) + pow(year_capture[j]+1, d[riverID[j]]))
+ 
 
     #t0[j]~dcat(pCol[1:10])
 
@@ -86,6 +85,13 @@ modelstat<-function(){
 
    q <- 0.25
 # PRIOR
+   #estimation naive densite
+   # for (j in 1:n){
+   #   
+   #   muD[j]~dnorm(0,0.1);T(0,)
+   #  
+   # }
+   
   for (i in 1:max(riverID)){
 
     #muD[i]~dnorm(0, 0.1)#~dgamma(1, 1)
@@ -104,7 +110,7 @@ modelstat<-function(){
  
     #d[i] <- (log(1-q))/(log(q) + log(beta[i]) -log(tq[i]))
     d[i]<-D
-    tq[i] ~dunif(1,20)
+    #tq[i] ~dunif(1,20)
     #kappa[i] <- theta[3]
     #alpha[i] <- theta[1]
     #beta[i] <- 1#theta[2]
@@ -143,6 +149,7 @@ modelstat<-function(){
   #  s[2]~dchisqr(2)
   mu_beta ~ dunif(0, 20)
   mu_kappa ~ dunif(5,30)
+  mu_kappa_bis ~ dunif(5,30)
   #mu_kappa~dgamma(2,1/s[1])
   #s[1]~dchisqr(2)
   #mu_beta~dgamma(2,1/s[2])
@@ -206,8 +213,8 @@ modelstat<-function(){
   #log_muD[pop, t]~dnorm(0, 0.001)
   #muD[pop, t] <- exp(log_muD[pop, t])
 
-    #Dens_pred[pop,t]<- exp(gamma[1]+gamma[2]*(t) + epsilonD[pop])
-    #Dens_pred[pop,t]<- exp(gamma[1]+gamma[2]*(t - mean(popAge[])) + epsilonD[pop])
+    #Dens_pred[pop,t] <- exp(gamma[1]+gamma[2]*(t) + epsilonD[pop])
+    #Dens_pred[pop,t] <- exp(gamma[1]+gamma[2]*(t - mean(popAge[])) + epsilonD[pop])
     #Dens_pred[pop,t] <-  kappa[pop] / (1+exp(-beta[pop]*log(t)))
     #Dens_pred[pop,t] <-  kappa[pop] / (1+alpha[pop]*exp(beta[pop]*(t-1)))
 
@@ -229,3 +236,4 @@ modelstat<-function(){
 #} # end loop t
 
 } #end model
+
