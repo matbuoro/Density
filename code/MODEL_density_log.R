@@ -1,0 +1,73 @@
+modelstat<-function(){
+  for (j in 1:n){ #y boucle sur les lignes du dataframe
+    N[j]~dpois(lambda[j]) #N tiré dans poisson dépend de param lambda
+    DL1[j]~dbin(p[j],N[j]) #C1 vecteur. y=1-> premier élemt C1. C1 varie tous les ans
+    N2[j]<-(N[j]-DL1[j])
+    DL2[j]~dbin(p[j],N2[j])
+    P1[j]~dbin(p[j],N[j])
+    P2[j]~dbin(p[j],N[j])
+    PE[j]~dbin(p[j],N[j]) #p différente ?
+    lambda[j]<-(dens[j]*(area[j]/100)) # number of fish / 100m2
+    dens[j]~dlnorm(log_muD[j], tauD)
+    log_muD[j] <- log(muD[j])
+    #muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(beta[riverID[j]]*(year_capture[j])))
+    logit(p[j]) <- logit_p[j]
+    logit_p[j]~dnorm(log_muP[j], tauP)
+    log_muP[j] <- delta[1]+  epsilonP[riverID[j]] # /!\ we consider year effect instead of age because protocol and sampling effort could have change over time.
+    area[j] ~ dlnorm(muS[riverID[j]],tauS);T(,2500)
+  }#end boucle
+  
+  #estimation naive densite
+  for (j in 1:n){
+
+    muD[j]~dnorm(0,0.1);T(0,)
+
+    }
+
+  
+  for (i in 1:max(riverID)){
+    muS[i]~dnorm(0, 0.1)#~dgamma(1, 1)
+    beta[i] ~ dnorm(mu_beta, tau_beta)
+    alpha[i]~dnorm(mu_alpha,tau_alpha)
+    kappa[i]~dnorm(mu_kappa,tau_kappa)
+  }
+  
+  # tau_epsilon[1] <- pow(sigma_eps[1],-2)
+  # sigma_eps[1] ~ dunif(0,10)
+  # tau_epsilon[2] <- pow(sigma_eps[2],-2)
+  # sigma_eps[2] ~ dunif(0,10)
+  tau_alpha <- pow(sigma_alpha,-2)
+  sigma_alpha ~ dunif(0,100)
+  tau_kappa <- pow(sigma_kappa,-2)
+  sigma_kappa ~ dunif(0,100)
+  mu_kappa~dgamma(2,1/s[1])
+  s[1]~dchisqr(2)
+  mu_beta~dgamma(2,1/s[2])
+  mu_alpha~dgamma(2,1/s[2])
+  s[2]~dchisqr(2)  #distrib chi2 étendue 
+  tau_beta <- pow(sigma_beta,-2)
+  sigma_beta ~ dunif(0,100)
+  gamma[1]~dnorm(0, 0.1)
+  gamma[2]~dnorm(0, 0.1)#;T(0,)#~dgamma(1, 1)
+  delta[1]<- ilogit(pmoy)
+  pmoy~dbeta(4,2)
+  delta[2]~dnorm(0, 0.1)#~dgamma(1, 1)
+  tauS <- pow(sigmaS,-2)# variance intra-annuelle
+  sigmaS ~ dunif(0,1000)
+  tauD <- pow(sigmaD,-2)# variance intra-annuelle
+  sigmaD ~ dunif(0,1000)
+  tauP <- pow(sigmaP,-2)# variance intra-annuelle
+  sigmaP ~ dunif(0,10)
+  nu~dgamma(0.1,0.1)
+  
+  for (pop in 1:max(riverID)){   
+    P_pred[pop]<- ilogit(delta[1]+ epsilonP[pop])#+ (pow(t,delta[3])))
+    for (t in 1:(maxPopAge[pop]+1)){
+      #Dens_pred[pop,t] <-  kappa[pop] / (1+alpha[pop]*exp(beta[pop]*(t-1)))
+      #modèle naif
+      log_muD[pop, t]~dnorm(0, 0.001)
+      muD[pop, t] <- exp(log_muD[pop, t])
+    } # end loop t
+  } # end loop pop
+} #end model
+

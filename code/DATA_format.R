@@ -247,10 +247,9 @@ data$Age_cohort <- ifelse(data$month ==12, data$popAge+1, data$popAge)
 #here we filter to obtain only sites that were sampled in DL1 / DL2 or Petersen. 
 data<-subset(data, (!is.na(DL1) & !(is.na(DL2))) | ((!is.na(P1)) & !(is.na(P2))) | (!is.na(PE))) 
 
-
 ## here we place the data in a format needed for Jags. 
 
-#note that these IDs are not the same between different datasets: if we want to merge results, we will have to use basin names. 
+#note that these IDs are not the same between different datasets: if we want to merge results, we will have to use basin names
 data$riverID<-unclass(factor(data$basin)) #unclass prend le rang de chaque categorie. Basin transforme en facteur: variable categorielle
 #data$siteID<-rowid(data$XYZ,factor(data$riverID))  # this is the sampling site ID WITHIN the riverID. Useful for hierarchization
 # Retrieve levels of the factor
@@ -269,9 +268,9 @@ for (i in 1:nrow(data)){
  data$year_capture[i]=data$Year_cohort[i] - firstCapture[data$riverID[i]]
 }
 
+
 dataToJags <- list(                                               #liste aggr?g?e d'objets
-  n = nrow(data),  
-  # AgeFish=data$age,                                             #N fait n de long avec r?p?titions NA
+  n = nrow(data),                                              #N fait n de long avec r?p?titions NA
   #Nriver= length(unique(data$riverID)),
   DL1 = data$DL1,						
   DL2 = data$DL2,

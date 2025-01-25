@@ -39,16 +39,19 @@ modelstat<-function(){
     #dens[j]~dnorm(muD[j], tauD)
     #muD[j] <- A + (Kappa-A) / pow(C+Q*exp(-B*popAge[j]), 1/v)
     #muD[j] <- Kappa * (1 / pow(1+Q*exp(-B*popAge[j]), 1/nu))
+    #muD[j] <- Kappa * (1 / (1+pow(Q*exp(-B*popAge[j]), 1/nu)))
     log_muD[j] <- log(muD[j])
     #muD[j] <- kappa[riverID[j]] / (1+exp(-beta[riverID[j]]*log(popAge[j])))
-    #muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(beta[riverID[j]]*(year_capture[j])))#+(t0[j]-1))))
+    muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(beta[riverID[j]]*(year_capture[j])))#+(t0[j]-1))))
     #muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(-beta[riverID[j]]*(year[j]-1962)))
     #muD[j] <- theta[3] / (1+exp(theta[1]+theta[2]*(popAge[j]-t0)))
+    
+    
 
  #muD[j] <- (kappa[riverID[j]]* alpha[riverID[j]]) / (alpha[riverID[j]] + (kappa[riverID[j]] - alpha[riverID[j]])*pow(beta[riverID[j]], -popAge[j]))
 
 # Berverton-Holt
-   muD[j] <- (kappa[riverID[j]]* pow(year_capture[j]+1, d[riverID[j]])) / (pow(beta[riverID[j]], d[riverID[j]]) + pow(year_capture[j]+1, d[riverID[j]]))
+   #muD[j] <- (kappa[riverID[j]]* pow(year_capture[j]+1, d[riverID[j]])) / (pow(beta[riverID[j]], d[riverID[j]]) + pow(year_capture[j]+1, d[riverID[j]]))
  
 
     #t0[j]~dcat(pCol[1:10])
@@ -83,7 +86,8 @@ modelstat<-function(){
   #theta[2] ~ dnorm(0, 0.001)
   #theta[3] ~ dnorm(0, 0.001);T(0,)
 
-   q <- 0.25
+   # q <- 0.25
+   
 # PRIOR
    #estimation naive densite
    # for (j in 1:n){
@@ -100,16 +104,19 @@ modelstat<-function(){
     epsilonD[i]~dnorm(0,tau_epsilon[1]) #random effect for density
     epsilonP[i]~dnorm(0,tau_epsilon[2]) #random effect for capture probability
 
-    kappa[i]~dnorm(mu_kappa, pow(sigma_kappa,-2));T(0,)
+    #kappa[i]~dnorm(mu_kappa, pow(sigma_kappa,-2));T(0,)
     #kappa[i] <- (k_prior*49)+1
     #alpha[i] ~dexp(1)
-    beta[i] ~dexp(1)
+    
+    # #prior beverton
+    # beta[i] ~dexp(1)
+    # d[i]<-D
 
     #d[i]~dexp(1)
  
  
     #d[i] <- (log(1-q))/(log(q) + log(beta[i]) -log(tq[i]))
-    d[i]<-D
+    
     #tq[i] ~dunif(1,20)
     #kappa[i] <- theta[3]
     #alpha[i] <- theta[1]
@@ -117,11 +124,12 @@ modelstat<-function(){
     #alpha <- (kappa/P0 -1)*exp(beta*t0)
     #beta[i] <- mu_beta
     #beta[i] ~ dnorm(0, 0.1)
-    #beta[i] ~ dnorm(mu_beta, tau_beta)
     #beta[i]~dgamma(2,1/s[2])
-  
-    #alpha[i]~dnorm(mu_alpha,tau_alpha)
-    #kappa[i]~dnorm(mu_kappa,tau_kappa)
+    
+    #logistique généralisée
+    beta[i] ~ dnorm(mu_beta, tau_beta)
+    alpha[i]~dnorm(mu_alpha,tau_alpha)
+    kappa[i]~dnorm(mu_kappa,tau_kappa)
 
     # reparameterization to real line
     #kappa[i] <- exp(theta.k[i])
@@ -144,30 +152,36 @@ modelstat<-function(){
 #s[4]<- 0.5#~dchisqr(1)
 
 # root node priors - population means
-  mu_alpha ~ dunif(0, 50)
-  #  mu_alpha~dgamma(2,1/s[2])
-  #  s[2]~dchisqr(2)
-  mu_beta ~ dunif(0, 20)
-  mu_kappa ~ dunif(5,30)
-  mu_kappa_bis ~ dunif(5,30)
-  #mu_kappa~dgamma(2,1/s[1])
+  #BH
+  # mu_alpha ~ dunif(0, 50)
+  # mu_beta ~ dunif(0, 20)
+  # mu_kappa ~ dunif(5,30)
+  # mu_kappa_bis ~ dunif(5,30)
+  # 
+  # k_prior~dbeta(2,2)
+  # D~dbeta(2,2)
+  # 
+  # tau_epsilon[1] <- pow(sigma_eps[1],-2)
+  # sigma_eps[1] ~ dunif(0,10)
+  # tau_epsilon[2] <- pow(sigma_eps[2],-2)
+  # sigma_eps[2] ~ dunif(0,10)
+  # sigma_kappa ~ dunif(0,10)
+  
+  
+  
+  
+  tau_alpha <- pow(sigma_alpha,-2)
+  sigma_alpha ~ dunif(0,100)
+  tau_kappa <- pow(sigma_kappa,-2)
+  sigma_kappa ~ dunif(0,100)
+  mu_kappa~dgamma(2,1/s[1])
   #s[1]~dchisqr(2)
-  #mu_beta~dgamma(2,1/s[2])
+  mu_beta~dgamma(2,1/s[2])
   #s[2]~dchisqr(2)
-
-  k_prior~dbeta(2,2)
-  D~dbeta(2,2)
-
-  tau_epsilon[1] <- pow(sigma_eps[1],-2)
-  sigma_eps[1] ~ dunif(0,10)
-  tau_epsilon[2] <- pow(sigma_eps[2],-2)
-  sigma_eps[2] ~ dunif(0,10)
-  #tau_alpha <- pow(sigma_alpha,-2)
-  #sigma_alpha ~ dunif(0,100)
-  #tau_kappa <- pow(sigma_kappa,-2)#
-  sigma_kappa ~ dunif(0,10)
-  #tau_beta <- pow(sigma_beta,-2)
-  #sigma_beta ~ dunif(0,100)
+  mu_alpha~dgamma(2,1/s[2])
+  s[2]~dchisqr(2)  #distrib chi2 étendue 
+  tau_beta <- pow(sigma_beta,-2)
+  sigma_beta ~ dunif(0,100)
 
   
   gamma[1]~dnorm(0, 0.1)
@@ -199,7 +213,7 @@ modelstat<-function(){
 #mu_kappa~dnorm(0,0.1)
 #mu_alpha~dnorm(0,0.1)
 #beta <-1#~dgamma(0.1, 0.1)
-#nu~dgamma(0.1,0.1)
+nu~dgamma(0.1,0.1)
 
 
  # PREDICTION
@@ -216,9 +230,10 @@ modelstat<-function(){
     #Dens_pred[pop,t] <- exp(gamma[1]+gamma[2]*(t) + epsilonD[pop])
     #Dens_pred[pop,t] <- exp(gamma[1]+gamma[2]*(t - mean(popAge[])) + epsilonD[pop])
     #Dens_pred[pop,t] <-  kappa[pop] / (1+exp(-beta[pop]*log(t)))
-    #Dens_pred[pop,t] <-  kappa[pop] / (1+alpha[pop]*exp(beta[pop]*(t-1)))
+    Dens_pred[pop,t] <-  kappa[pop] / (1+alpha[pop]*exp(beta[pop]*(t-1)))
 
-    Dens_pred[pop,t] <- ((kappa[pop]* pow(t, d[pop])) / (pow(beta[pop], d[pop]) + pow(t, d[pop])))
+       #BH
+    #Dens_pred[pop,t] <- ((kappa[pop]* pow(t, d[pop])) / (pow(beta[pop], d[pop]) + pow(t, d[pop])))
 
     #P_pred[pop,t]<- ilogit(delta[1]+  epsilonP[pop])#+ (pow(t,delta[3])))
     #P_pred[pop,t]<- ilogit(delta[1]+ delta[2]*t + epsilonP[pop])#+ (pow(t,delta[3])))
