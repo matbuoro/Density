@@ -16,7 +16,7 @@ str(dataToJags)
 ## MODEL ####
 ##2. Modelisation statistique: inférence des paramètres en fonction des données 
 #langage bugs
-source("code/MODEL_density.R")
+source("code/MODEL_density_BH.R")
 
 
 ## INITS ####
@@ -34,17 +34,22 @@ inits<-function(){
   list(
     N=N_inits,
     #p=p,d=d
-    #alpha= 10, beta=5,
+    #alpha= 10, 
+    #beta=5,
     #p=rep(0.8,max(datatojags$year)),
     pmoy=0.7,
     delta=c(NA,0),#0.3),
     #gamma=c(-1,0),#0),
-    #mu_kappa=0.2,
-    #mu_alpha=2,
+    mu_kappa=15,
+    mu_alpha=2,
+    mu_beta=0.1,
     #sigmaD=0.1,
     sigmaP=1,
     k_prior=0.5, D = 0.99,
-    #kappa = runif(max(dataToJags$riverID), 10,30),
+    kappa = runif(max(dataToJags$riverID), 10,30),
+    alpha = runif(max(dataToJags$riverID), 0,5),
+    beta = runif(max(dataToJags$riverID), 0,5),
+    
     #sigma_alpha=10,
     area=area_inits,
     tq=rep(10,max(dataToJags$riverID))#,
