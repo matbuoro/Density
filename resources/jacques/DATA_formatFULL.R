@@ -1,4 +1,10 @@
 
+
+rm(list = ls())
+
+setwd( "C:/Dropbox/travail/Kerguelen/densité/git") # ton chemin.
+
+
 data<-read.table("data/census_data.txt",h=T, fill=TRUE)
 
 data <- subset(data, data$basin != "Chateau_>_Ferme_ou_Etangs")
@@ -31,7 +37,7 @@ data <- data[-which(data$area>2500),] # remove area above 2500m2
 data <- subset(data, data$basin != "Isthme_du_Lac")
 data <- subset(data, data$basin != "Etang_des_Beliers")
 data <- subset(data, data$basin != "Ampere")
-
+###we should remove ravin du charbon. ?
 data <- subset(data, data$basin != "Ravin_du_Charbon")
 
 
@@ -40,11 +46,11 @@ data <- subset(data, data$basin != "Ravin_du_Charbon")
 ##creating colonization vectors for any datasets (any of the two density datasets that is)  
 #uncol=date jusqu'? laquelle certain pas de repro naturelle
 
-uncolvector<-c(1983,1968,1978,1994,1997,1977,1984,2003,2020,1985,1986,1986,1962,1996,1985,2020,1982,2020,1962,2000,1991,1998,1997,2004,1981,2015,1996,2017,1996,1982,2011,2017,1987,1986,1968,2014,2014,1989,1984,1997,2016,2004,1995,1988,1962,1979,1989,1996,1995,1986,1987,2004) #still a problem here with gorfous
-colvector  <-c(1983,1968,1980,1994,1998,1977,1989,2007,2023,1989,1992,1986,1962,1996,1985,2022,1990,2022,1962,2000,2000,2000,2000,2008,1981,2020,1996,2017,1999,1990,2014,2023,1987,1986,1968,2014,2014,1989,1984,1997,2016,2020,2000,1992,1962,1979,1989,1996,1999,1986,1987,2012)
+uncolvector<-c(1983,1968,1978,1994,1997,1977,1984,2003,2020,1985,1986,1986,1962,1996,1985,2020,2020,1982,1962,2000,1991,1998,1997,2004,1981,2015,1996,2017,1996,1982,2011,2017,1987,1986,1968,2014,2014,1989,1984,1997,2016,2004,1995,1988,1962,1979,1989,1996,1995,1986,1987,2004) #still a problem here with gorfous
+colvector  <-c(1983,1968,1980,1994,1998,1977,1989,2007,2023,1989,1992,1986,1962,1996,1985,2022,2022,1990,1962,2000,2000,2000,2000,2008,1981,2020,1996,2017,1999,1990,2014,2023,1987,1986,1968,2014,2014,1989,1984,1997,2016,2020,2000,1992,1962,1979,1989,1996,1999,1986,1987,2012)
 # removing RAvin du CHarbon
 uncolvector<-uncolvector[-42]
-colvector<-colvector[-42]                
+colvector<-colvector[-42]              
 
 
 
@@ -114,7 +120,7 @@ for (i in 1:nrow(data)) {
 	} else if (data$basin[i]=="Entrelacs") {
 	  uncoldate[i]<-uncolvector[16]
 	  coldate[i]<-colvector[16]
-	} else if (data$basin[i]=="Est") {
+	} else if (data$basin[i]=="Est") {	##was mixed with Euphrosine.
 	  uncoldate[i]<-uncolvector[17]
 	  coldate[i]<-colvector[17]
 	} else if (data$basin[i]=="Euphrosine") {
@@ -189,9 +195,9 @@ for (i in 1:nrow(data)) {
 	} else if (data$basin[i]=="Radioleine") {
 		uncoldate[i]<-uncolvector[41]
 		coldate[i]<-colvector[41]
-	# } else if (data$basin[i]=="Ravin_du_Charbon") {
-	# 	uncoldate[i]<-uncolvector[42]
-	# 	coldate[i]<-colvector[42]				
+	#} else if (data$basin[i]=="Ravin_du_Charbon") {
+	#	uncoldate[i]<-uncolvector[42]
+	#	coldate[i]<-colvector[42]				
 	} else if (data$basin[i]=="Rohan") {
 		uncoldate[i]<-uncolvector[42]
 		coldate[i]<-colvector[42]
@@ -236,23 +242,19 @@ data$popAge<-(data$year)-(data$coldate)
 #data <- data[-which(data$popAge<0),] # remove colDate > observation
 data <- data[-which(data$popAge<(-3)),] # remove colDate > observation  ##risky business. Remove some rivers -> mess with IDs numbers ?
 
-# #Take out areas considered not reliable
-# table((as.factor(data$comment))=="not_reliable")
-# data <- subset(data, comment != "not_reliable" | is.na(comment))
 
 # Keep only data from december to February
-# data <- subset(data, month %in% c(12,1,2,3))
+#data <- subset(data, month %in% c(12,1,2,3))
 
 
 # Cohort year: les captures de decembre sont attribuées à l'année suivante
 data$Year_code <- data$year-min(data$year)+1 # recode year
-# data$Year_cohort <- ifelse(data$month ==12, data$Year_code+1, data$Year_code)
-# data$Age_cohort <- ifelse(data$month ==12, data$popAge+1, data$popAge)
+#data$Year_cohort <- ifelse(data$month ==12, data$Year_code+1, data$Year_code)
+#data$Age_cohort <- ifelse(data$month ==12, data$popAge+1, data$popAge)
 data$Year_cohort <- ifelse(data$month > 6, data$Year_code+1, data$Year_code)
 data$Age_cohort <- ifelse(data$month > 6, data$popAge+1, data$popAge)
 
-
-#here we filter to obtain only sites that were sampled in DL1 / DL2 or Petersen. 
+#here we filter to obtain only sites that were sampled in DL1 / DL2 or Petersen. Or PE.
 data<-subset(data, (!is.na(DL1) & !(is.na(DL2))) | ((!is.na(P1)) & !(is.na(P2))) | (!is.na(PE))) 
 
 ## here we place the data in a format needed for Jags. 
@@ -271,7 +273,7 @@ trueMaxPopAge<-2025-colvector
 for (pop in 1:max(data$riverID)){
 maxPopAge[pop] <- max(data$Age_cohort[recode_factor==pop]) ## surely this is right but yet...
 firstCapture[pop] <- min(data$Year_cohort[recode_factor==pop])
-}#relatif à la cohorte donc ne va que jusque dernière pèche 
+}
 
 year_capture=NULL
 for (i in 1:nrow(data)){
@@ -305,5 +307,3 @@ dataToJags <- list(                                               #liste aggr?g?
 
 
 
-
-#DL1 <- array(, dim=c())
