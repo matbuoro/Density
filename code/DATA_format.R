@@ -231,10 +231,11 @@ doubtDate<-(data$coldate)-(data$uncoldate) # the span of colonization date uncer
 #cherche les lignes qui ont NA dans coldate
 data$basin[is.na(data$coldate)]
 
-#here we define the age of sampling with regard to the population age. 
+data$metapopAge<-data$year-min(coldate)
 data$popAge<-(data$year)-(data$coldate)
+
 #data <- data[-which(data$popAge<0),] # remove colDate > observation
-data <- data[-which(data$popAge<(-3)),] # remove colDate > observation  ##risky business. Remove some rivers -> mess with IDs numbers ?
+#data <- data[-which(data$popAge<(-3)),] # remove colDate > observation  ##risky business. Remove some rivers -> mess with IDs numbers ?
 
 # #Take out areas considered not reliable
 # table((as.factor(data$comment))=="not_reliable")
@@ -244,39 +245,38 @@ data <- data[-which(data$popAge<(-3)),] # remove colDate > observation  ##risky 
 # data <- subset(data, month %in% c(12,1,2,3))
 
 
-# Cohort year: les captures de decembre sont attribuées à l'année suivante
-data$Year_code <- data$year-min(data$year)+1 # recode year
-# data$Year_cohort <- ifelse(data$month ==12, data$Year_code+1, data$Year_code)
-# data$Age_cohort <- ifelse(data$month ==12, data$popAge+1, data$popAge)
-data$Year_cohort <- ifelse(data$month > 6, data$Year_code+1, data$Year_code)
-data$Age_cohort <- ifelse(data$month > 6, data$popAge+1, data$popAge)
+# # Cohort year: les captures de decembre sont attribuées à l'année suivante
+# data$Year_code <- data$year-min(data$year)+1 # recode year
+# # data$Year_cohort <- ifelse(data$month ==12, data$Year_code+1, data$Year_code)
+# # data$Age_cohort <- ifelse(data$month ==12, data$popAge+1, data$popAge)
+# data$Year_cohort <- ifelse(data$month > 6, data$Year_code+1, data$Year_code)
+# data$Age_cohort <- ifelse(data$month > 6, data$popAge+1, data$popAge)
 
 
 #here we filter to obtain only sites that were sampled in DL1 / DL2 or Petersen. 
 data<-subset(data, (!is.na(DL1) & !(is.na(DL2))) | ((!is.na(P1)) & !(is.na(P2))) | (!is.na(PE))) 
 
-## here we place the data in a format needed for Jags. 
-
 #note that these IDs are not the same between different datasets: if we want to merge results, we will have to use basin names
 data$riverID<-unclass(factor(data$basin)) #unclass prend le rang de chaque categorie. Basin transforme en facteur: variable categorielle
 #data$siteID<-rowid(data$XYZ,factor(data$riverID))  # this is the sampling site ID WITHIN the riverID. Useful for hierarchization
-# Retrieve levels of the factor
-factor_levels <- levels(factor(data$basin))
+
+basin_vector <- levels(factor(data$basin))
 # Recode factor based on position
-recode_factor <- factor(factor(data$basin), labels = seq_along(factor_levels))
+recode_factor <- factor(factor(data$basin), labels = seq_along(basin_vector))
 
 maxPopAge=firstCapture=NULL
 trueMaxPopAge<-2025-colvector
 
+#relatif à la cohorte donc ne va que jusque dernière pèche et pas jusque 2025. Ex: 
 for (pop in 1:max(data$riverID)){
-maxPopAge[pop] <- max(data$Age_cohort[recode_factor==pop]) ## surely this is right but yet...
-firstCapture[pop] <- min(data$Year_cohort[recode_factor==pop])
-}#relatif à la cohorte donc ne va que jusque dernière pèche 
-
-year_capture=NULL
-for (i in 1:nrow(data)){
- data$year_capture[i]=data$Year_cohort[i] - firstCapture[data$riverID[i]]
+maxPopAge[pop] <- max(data$popAge[recode_factor==pop])+ (2025-max(data$year[recode_factor==pop]))
+firstCapture[pop] <- min(data$popAge[recode_factor==pop])
 }
+
+# year_capture=NULL
+# for (i in 1:nrow(data)){
+#  data$year_capture[i]=data$Year_cohort[i] - firstCapture[data$riverID[i]]
+# }
 
 
 dataToJags <- list(                                               #liste aggr?g?e d'objets
@@ -296,7 +296,7 @@ dataToJags <- list(                                               #liste aggr?g?
   year= data$year - min(data$year)+1,   # it is the year of sampling
   popAge=data$Age_cohort,  # it is the population age /!\ but by cohort gb+mb 27032024
   #max_year = max(data$Year_cohort)
-  year_capture=data$year_capture,
+  # year_capture=data$year_capture,
   t0= doubtDate+1,
   coldate=data$coldate,
   maxPopAge=maxPopAge,
