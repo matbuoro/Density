@@ -49,8 +49,8 @@ inits<-function(){ # works for naive
   )
 }
 
-parameters <-c(
-                "alpha_muD"
+parameters <-c("muD"
+                ,"alpha_muD"
                 ,"pmoy"
                ,"P_pred"
                ,"sigma_eps"
@@ -98,6 +98,38 @@ caterplot(jagsfit, parms = c("P_pred"), reorder=FALSE, horizontal = FALSE, label
 caterplot(jagsfit, parms = c("muS"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Moyenne surface");
 
 dev.off()
+
+
+
+
+muD <- jagsfit$BUGSoutput$sims.list$muD
+str(muD)
+quantiles <- apply(muD, 2, function(x) quantile(x, probs = c(0.05, 0.25,0.5, 0.75, 0.95)))
+
+riverIDs <- sort(unique(dataToJags$riverID))
+pdf(file="results/Observed_densityByPop.pdf")
+par(mfrow=c(2,1))
+#dens <- (jagsfit$BUGSoutput$sims.list$dens)
+for (pop in riverIDs){
+  ids <- which(dataToJags$riverID==pop)
+  observedPop<- dataToJags$year[ids]
+  #observedPop<- 1:MaxPopAge[pop]
+  #observedPop<- 1:max(dataToJags$maxPopAge)
+  #observedPop<- sort(unique(tmp))-1962
+  q50 <-quantiles["50%",ids]
+  q5 <-quantiles["5%",ids]
+  q95 <-quantiles["95%",ids]
+  q25 <-quantiles["25%",ids]
+  q75 <-quantiles["75%",ids]
+  plot(NULL, xlim=c(1,59),ylim=c(0,25), ylab="Densité/100 m^2",xaxt='n', xlab="",main=levels(factor(data$basin))[pop])
+  axis(1,at=1:59,labels=1967:2025, las=2, cex=0.25)
+  points(observedPop,q50, pch=16)
+  segments(observedPop,q5,observedPop,q95)
+  segments(observedPop,q25,observedPop,q75, lwd=2)
+}
+dev.off()
+
+
 
 
 

@@ -293,7 +293,7 @@ dataToJags <- list(                                               #liste aggr?g?
   ,riverID = as.integer(recode_factor)
   #,vec_riverID=unique(data$riverID),
   #,siteID = data$siteID,  
-  ,year= data$year# - min(data$year)+1  # it is the year of sampling
+  ,year= data$year - min(data$year)+1  # it is the year of sampling
   ,popAge=data$popAge  # it is the population age /!\ but by cohort gb+mb 27032024
   #,max_year = max(data$Year_cohort)
   #, year_capture=data$year_capture,
