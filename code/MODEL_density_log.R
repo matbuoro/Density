@@ -14,7 +14,8 @@ modelstat<-function(){
     #muD[j] <- alpha_muD[riverID[j]]
     ##log
     #muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(beta[riverID[j]]*(year_capture[j])))
-    muD[j] <- kappa[riverID[j]] / (1+mu_alpha * exp(-beta[riverID[j]]*(year_capture[j]))) #log
+    #muD[j] <- kappa[riverID[j]] / (1+mu_alpha * exp(-beta[riverID[j]]*(year[j]))) #log
+    muD[j] <- kappa[riverID[j]] / (1+mu_alpha * exp(-mu_beta*(year[j]))) #log
     logit(p[j]) <- logit_p[j]
     logit_p[j]~dnorm(log_muP[j], tauP)
     log_muP[j] <- delta + epsilonP[riverID[j]] # /!\ we consider year effect instead of age because protocol and sampling effort could have change over time.
@@ -34,13 +35,13 @@ modelstat<-function(){
   
   for (i in 1:max(riverID)){
     muS[i]~dnorm(0, 0.01)#~dgamma(1, 1)
-    beta[i] ~ dnorm(mu_beta, tau_beta)
-    kappa[i]~dnorm(mu_kappa,tau_kappa)
+    #beta[i] ~ dnorm(mu_beta, tau_beta)
+    kappa[i]~dlnorm(mu_kappa,tau_kappa)
     epsilonP[i]~dnorm(0,tau_epsilon) #random effect for capture probability
     # alpha[i]~dnorm(mu_alpha,tau_alpha)
-
   }
   
+  beta_pred~ dnorm(mu_beta, tau_beta)
   # tau_epsilon[1] <- pow(sigma_eps[1],-2)
   # sigma_eps[1] ~ dunif(0,10)
   tau_epsilon <- pow(sigma_eps,-2)
@@ -53,16 +54,21 @@ modelstat<-function(){
   # tau_alpha <- pow(sigma_alpha,-2)
   sigma_alpha ~ dunif(0,100)
   tau_kappa <- pow(sigma_kappa,-2)
-  sigma_kappa ~ dunif(0,2)
-  mu_kappa~dunif(1,100) 
+  sigma_kappa ~ dunif(0,5)
+  mu_kappa ~ dnorm(0, 1)#~dunif(1,100)
+  #mu_kappa <- pre_kappa*30
+  pre_kappa~dbeta(2,2)
   mu_beta~dnorm(0.1,1)
   mu_alpha~dunif(1,40) 
   # mu_kappa~dgamma(2,1/s)
   # s~dchisqr(2)
   # mu_beta~dgamma(2,1/s)
   # mu_alpha~dgamma(2,1/s)
-  delta<- ilogit(pmoy)
-  pmoy~dbeta(4,2)
+  #delta<- ilogit(pmoy)
+  #pmoy~dbeta(4,2)
+  logit(delta)<-logit_delta
+  logit_delta~dnorm(0, 1.5)
+  pmoy<-ilogit(delta)
   #delta[2]~dnorm(0, 0.1)#~dgamma(1, 1)
   tauS <- pow(sigmaS,-2)# variance intra-annuelle
   sigmaS ~ dunif(0,1000)
@@ -72,7 +78,7 @@ modelstat<-function(){
   sigmaP ~ dunif(0,10)
   # tauP[2] <- pow(sigmaP[2],-2)
   # sigmaP[2] ~ dunif(0,10)
-  nu~dgamma(0.1,0.1)
+  #nu~dgamma(0.1,0.1)
   
   for (pop in 1:max(riverID)){   
     P_pred[pop]<- ilogit(delta+ epsilonP[pop])#+ (pow(t,delta[3])))
@@ -82,5 +88,8 @@ modelstat<-function(){
     # #   
     #  } # end loop t
   } # end loop pop
-} #end model
+#   for (j in 1:n){ 
+#   muD_pred[j] <- kappa[riverID[j]] / (1+mu_alpha * exp(-beta[riverID[j]]*(year[j])))
+# }
+  } #end model
 

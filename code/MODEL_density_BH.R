@@ -21,7 +21,8 @@ modelstat<-function(){
     dens[j]~dlnorm(log_muD[j], tauD)
     log_muD[j] <- log(muD[j])
     # Berverton-Holt
-    muD[j] <- (kappa[riverID[j]]* pow(year_capture[j]+1, d[riverID[j]])) / (pow(beta[riverID[j]], d[riverID[j]]) + pow(year_capture[j]+1, d[riverID[j]]))
+    #muD[j] <- (kappa[riverID[j]]* pow(year[j]+1, d[riverID[j]])) / (pow(beta[riverID[j]], d[riverID[j]]) + pow(year[j]+1, d[riverID[j]]))
+    muD[j] <- (kappa[riverID[j]]* pow(year[j]+1, d)) / (pow(beta, d) + pow(year[j]+1, d))
     
     ## Proba capture
     logit(p[j]) <- logit_p[j]
@@ -38,21 +39,27 @@ modelstat<-function(){
   for (i in 1:max(riverID)){
   
     muS[i]~dnorm(0, 0.1)#~dgamma(1, 1)
-    kappa[i]~dnorm(mu_kappa, pow(sigma_kappa,-2));T(0,)
-    beta[i] ~dexp(1)
-    d[i]<-D
+    kappa[i]~dlnorm(mu_kappa, pow(sigma_kappa,-2));
+    #beta[i] ~dexp(1)
+    #d[i]<-D
     epsilonP[i]~dnorm(0,tau_epsilon) #random effect for capture probability
 
   }
   
   # root node priors - population means
   #BH
-  mu_kappa ~ dunif(5,30)
+  mu_kappa ~ dnorm(0,1)
   sigma_kappa ~ dunif(0,10)
-  D~dbeta(2,2)
+  #D~dbeta(2,2)
+  
+  beta~dlnorm(0,1)
+  d~ dlnorm(0,1)
 
-  delta[1]<- ilogit(pmoy)
-  pmoy ~ dbeta(4,2)
+  #delta[1]<- ilogit(pmoy)
+  #pmoy ~ dbeta(4,2)
+  logit(delta)<-logit_delta
+  logit_delta~dnorm(0, 1.5)
+  pmoy<-ilogit(delta)
   
   tauS <- pow(sigmaS,-2)# variance intra-annuelle
   sigmaS ~ dunif(0,1000)
@@ -69,12 +76,12 @@ modelstat<-function(){
     
     P_pred[pop]<- ilogit(delta+ epsilonP[pop])#+ (pow(t,delta[3])))
     
-    for (t in 1:(trueMaxPopAge[pop]+1)){
+   # for (t in 1:(trueMaxPopAge[pop]+1)){
       
       #BH
-      Dens_pred[pop,t] <- ((kappa[pop]* pow(t, d[pop])) / (pow(beta[pop], d[pop]) + pow(t, d[pop])))
+      #Dens_pred[pop,t] <- ((kappa[pop]* pow(t, d[pop])) / (pow(beta[pop], d[pop]) + pow(t, d[pop])))
    
-       } # end loop t
+    #   } # end loop t
   } # end loop riverID
   
 } #end model
