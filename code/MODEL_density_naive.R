@@ -25,18 +25,18 @@ modelstat<-function(){
     muS[i]~dnorm(0, 0.01)#~dgamma(1, 1)
     epsilonP[i]~dnorm(0,tau_epsilon) 
     #naive estimation
-    for (y in 1:maxPopAge[i]){
-      alpha_muD[i, y] ~ dlnorm(0, 0.1)
+    for (y in 1:max(trueMaxPopAge)){
+      alpha_muD[i, y] ~ dlnorm(0, 1)
     }
-    
   }
 
   tau_epsilon <- pow(sigma_eps,-2)
   #tau_epsilon[2] <- pow(sigma_eps[2],-2)
   sigma_eps ~ dunif(0,10)
   #sigma_eps[2] ~ dunif(0,10)
-  delta<- ilogit(pmoy)
-  pmoy~dbeta(4,2)
+  logit(delta)<-logit_delta
+  logit_delta~dnorm(0, 1.5)
+  pmoy<-ilogit(delta)
   #delta[2]~dnorm(0, 0.1)#~dgamma(1, 1)
   tauS <- pow(sigmaS,-2)# variance intra-annuelle
   sigmaS ~ dunif(0,1000)
