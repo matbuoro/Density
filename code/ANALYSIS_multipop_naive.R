@@ -112,15 +112,22 @@ quantiles <- apply(alpha_muD, c(2, 3), function(x) quantile(x, probs = c(0.05, 0
 # - The third dimension (size 63) corresponds to the 3rd dimension indices
 quantiles <- aperm(quantiles, c(1, 3, 2))  # Change from (3, 51, 63) to (3, 63, 51)
 
-trueMaxPopAge<-dataToJags$trueMaxPopAge
+#MaxPopAge<-dataToJags$maxPopAge
 # Assuming `quantiles` is the [3, 51, 63] array from the previous step
 # and `trueMaxPopAge` is a vector of length 51
 
-for (pop in 1:51) {
-  if(trueMaxPopAge[pop]==63) next;
-  quantiles[, (trueMaxPopAge[pop] + 1):63, pop] <- NA
-}
+riverIDs <- sort(unique(dataToJags$riverID))
+# # by MetapopAge
+# for (pop in riverIDs) {
+#   if(MaxPopAge[pop]==63) next;
+#   quantiles[, (dataToJags$maxPopAge[pop] + 1):63, pop] <- NA
+# }
 
+#by AgePop
+# for (pop in riverIDs) {
+#   if(MaxPopAge[pop]==63) next;
+#   quantiles[, (MaxPopAge[pop] + 1):63, pop] <- NA
+# }
 
 
 # plot(factor(data$year_capture+1),muD)
@@ -131,11 +138,13 @@ for (pop in 1:51) {
 pdf(file="results/Observed_densityByPop.pdf")
 par(mfrow=c(2,1))
 #dens <- (jagsfit$BUGSoutput$sims.list$dens)
-for (pop in unique(dataToJags$riverID)){
+for (pop in riverIDs){
   #ids <- which(dataToJags$riverID==pop)
   #observedPop <- 1:dataToJags$trueMaxPopAge[pop]#(dataToJags$year[ids])
-  tmp<-subset(data, riverID==pop)
-  observedPop<- sort(unique(tmp$year))
+  tmp<-dataToJags$year[dataToJags$riverID==pop]
+  #observedPop<- 1:MaxPopAge[pop]
+  #observedPop<- 1:max(dataToJags$maxPopAge)
+  observedPop<- sort(unique(tmp))-1962
   q5 <-quantiles["5%",observedPop,pop]
   q95 <-quantiles["95%",observedPop,pop]
   q25 <-quantiles["25%",observedPop,pop]
@@ -150,5 +159,3 @@ dev.off()
 
 
 
-
-dev.off()

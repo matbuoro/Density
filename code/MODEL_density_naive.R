@@ -25,7 +25,7 @@ modelstat<-function(){
     muS[i]~dnorm(0, 0.01)#~dgamma(1, 1)
     epsilonP[i]~dnorm(0,tau_epsilon) 
     #naive estimation
-    for (y in 1:max(trueMaxPopAge)){
+    for (y in 1:max(maxPopAge)){
       alpha_muD[i, y] ~ dlnorm(0, 1)
     }
   }

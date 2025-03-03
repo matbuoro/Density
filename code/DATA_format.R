@@ -234,7 +234,7 @@ data$basin[is.na(data$coldate)]
 data$metapopAge<-data$year-min(coldate)
 data$popAge<-(data$year)-(data$coldate)
 
-#data <- data[-which(data$popAge<0),] # remove colDate > observation
+data <- data[which(data$popAge>0),] # remove colDate > observation
 #data <- data[-which(data$popAge<(-3)),] # remove colDate > observation  ##risky business. Remove some rivers -> mess with IDs numbers ?
 
 # #Take out areas considered not reliable
@@ -280,27 +280,29 @@ firstCapture[pop] <- min(data$popAge[recode_factor==pop])
 
 
 dataToJags <- list(                                               #liste aggr?g?e d'objets
-  n = nrow(data),                                              #N fait n de long avec r?p?titions NA
+  n = nrow(data)                                             #N fait n de long avec r?p?titions NA
   #Nriver= length(unique(data$riverID)),
-  DL1 = data$DL1,						
-  DL2 = data$DL2,
-  #DL3 = data$DL3,
-  P1 = data$P1, 
-  P2 = data$P2, 
-  PE = data$PE, # PE
+  ,DL1 = data$DL1						
+  ,DL2 = data$DL2
+  #DL3 = data$DL3
+  ,P1 = data$P1
+  ,P2 = data$P2 
+  ,PE = data$PE # PE
   #n = rep(NA,nrow(data)), 
-  area = data$area,  # we work in log here
-  riverID = as.integer(recode_factor),
-  #vec_riverID=unique(data$riverID),
-  #siteID = data$siteID,  
-  year= data$year - min(data$year)+1,   # it is the year of sampling
-  popAge=data$Age_cohort,  # it is the population age /!\ but by cohort gb+mb 27032024
-  #max_year = max(data$Year_cohort)
-  # year_capture=data$year_capture,
-  t0= doubtDate+1,
-  coldate=data$coldate,
-  maxPopAge=maxPopAge,
-  trueMaxPopAge=trueMaxPopAge)
+  ,area = data$area  # we work in log here
+  ,riverID = as.integer(recode_factor)
+  #,vec_riverID=unique(data$riverID),
+  #,siteID = data$siteID,  
+  ,year= data$year# - min(data$year)+1  # it is the year of sampling
+  ,popAge=data$popAge  # it is the population age /!\ but by cohort gb+mb 27032024
+  #,max_year = max(data$Year_cohort)
+  #, year_capture=data$year_capture,
+  #,t0= doubtDate+1,
+  ,coldate=data$coldate
+  ,maxPopAge=maxPopAge
+  ,maxMetapopAge=max(data$metapopAge)
+  #trueMaxPopAge=trueMaxPopAge
+  )
 
 
 
