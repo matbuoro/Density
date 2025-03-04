@@ -84,8 +84,8 @@ jagsfit <- jags(dataToJags,
                 parameters.to.save = parameters,  
                 n.chains = 2,  # Number of chains to run.
                 inits = inits,  # initial values for hyperparameters
-                n.iter = 5000*1,   #MCMC iterations, ajouter si converge pas
-                n.burnin = 1000,   # discard first X iterations
+                n.iter = 10000*1,   #MCMC iterations, ajouter si converge pas
+                n.burnin = 2000,   # discard first X iterations
                 n.thin = 1
 ) # keep every X iterations //ex: garde tous les 100 itérations
 

@@ -1,4 +1,31 @@
 
+individual_data<-read.table("data/individual_data.txt",h=T, fill=TRUE)
+individual_data<- subset(individual_data, basin == "Studer" | basin == "Norvegienne" | basin == "Korrigans")
+# individual_data$year <- as.numeric(as.character(individual_data$year))
+individual_data$length <- as.numeric(as.character(individual_data$length))
+
+Studer<-individual_data[individual_data$basin=="Studer",]
+Korrigans<-individual_data[individual_data$basin=="Korrigans",]
+Norvegienne<-individual_data[individual_data$basin=="Norvegienne",]
+
+pdf(file="results/Individuals_body_size_Norvegienne_Studer.pdf")
+par(mfrow=c(1,1))
+# boxplot(length ~ as.numeric(year), data = Korrigans,
+#         xlab = "Year", ylab = "Length",
+#         main = "Individuals body size - Korrigans",
+#         col = "lightgreen")
+boxplot(length ~ as.numeric(year), data = Norvegienne,
+        xlab = "Year", ylab = "Length",
+        main = "Individuals body size - Norvegienne",
+        col = "pink")
+boxplot(length ~ as.numeric(year), data = Studer,
+        xlab = "Year", ylab = "Length",
+        main = "Individuals body size - Studer",
+        col = "lightblue")
+dev.off()
+
+
+
 data<-read.table("data/census_data.txt",h=T, fill=TRUE)
 
 data <- subset(data, data$basin != "Chateau_>_Ferme_ou_Etangs")
@@ -23,9 +50,8 @@ for (i in 1:length(data$area)){
 }
 
 data <- data[-which(data$area>2500),] # remove area above 2500m2
-# comparer distributions 
 
-
+data$is.there.area <- ifelse(is.na(data$area), "No", "Yes")
 
 
 data <- subset(data, data$basin != "Isthme_du_Lac")
@@ -290,6 +316,7 @@ dataToJags <- list(                                               #liste aggr?g?
   ,PE = data$PE # PE
   #n = rep(NA,nrow(data)), 
   ,area = data$area  # we work in log here
+  ,is.there.area = data$is.there.area
   ,riverID = as.integer(recode_factor)
   #,vec_riverID=unique(data$riverID),
   #,siteID = data$siteID,  

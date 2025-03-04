@@ -15,7 +15,7 @@ modelstat<-function(){
     ##log
     #muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(beta[riverID[j]]*(year_capture[j])))
     #muD[j] <- kappa[riverID[j]] / (1+mu_alpha * exp(-beta[riverID[j]]*(year[j]))) #log
-    muD[j] <- kappa[riverID[j]] / (1+mu_alpha * exp(-mu_beta*(year[j]))) #log
+    muD[j] <- kappa[riverID[j]] / (1+mu_alpha * exp(-mu_beta*(popAge[j]))) #log
     logit(p[j]) <- logit_p[j]
     logit_p[j]~dnorm(log_muP[j], tauP)
     log_muP[j] <- delta + epsilonP[riverID[j]] # /!\ we consider year effect instead of age because protocol and sampling effort could have change over time.

@@ -22,7 +22,7 @@ modelstat<-function(){
     log_muD[j] <- log(muD[j])
     # Berverton-Holt
     #muD[j] <- (kappa[riverID[j]]* pow(year[j]+1, d[riverID[j]])) / (pow(beta[riverID[j]], d[riverID[j]]) + pow(year[j]+1, d[riverID[j]]))
-    muD[j] <- (kappa[riverID[j]]* pow(year[j]+1, d)) / (pow(beta, d) + pow(year[j]+1, d))
+    muD[j] <- (kappa[riverID[j]]* pow(popAge[j]+1, d)) / (pow(beta, d) + pow(popAge[j]+1, d))
     
     ## Proba capture
     logit(p[j]) <- logit_p[j]
