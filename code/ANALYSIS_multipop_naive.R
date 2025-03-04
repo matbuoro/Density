@@ -71,8 +71,8 @@ jagsfit <- jags(dataToJags,
                 parameters.to.save = parameters,  
                 n.chains = 2,  # Number of chains to run.
                 inits = inits,  # initial values for hyperparameters
-                n.iter = 5000*1,   #MCMC iterations, ajouter si converge pas
-                n.burnin = 1000,   # discard first X iterations
+                n.iter = 10000*1,   #MCMC iterations, ajouter si converge pas
+                n.burnin = 2000,   # discard first X iterations
                 n.thin = 1
 ) # keep every X iterations //ex: garde tous les 100 itérations
 
@@ -107,7 +107,7 @@ str(muD)
 quantiles <- apply(muD, 2, function(x) quantile(x, probs = c(0.05, 0.25,0.5, 0.75, 0.95)))
 
 riverIDs <- sort(unique(dataToJags$riverID))
-pdf(file="results/Observed_densityByPop.pdf")
+pdf(file="results/Observed_densityByPop_naive.pdf")
 par(mfrow=c(2,1))
 #dens <- (jagsfit$BUGSoutput$sims.list$dens)
 for (pop in riverIDs){
@@ -121,11 +121,13 @@ for (pop in riverIDs){
   q95 <-quantiles["95%",ids]
   q25 <-quantiles["25%",ids]
   q75 <-quantiles["75%",ids]
-  plot(NULL, xlim=c(1,59),ylim=c(0,25), ylab="Densité/100 m^2",xaxt='n', xlab="",main=levels(factor(data$basin))[pop])
+  colors <- ifelse(dataToJags$is.there.area[ids] == "No", "red", "black")
+  plot(NULL, xlim=c(1,59),ylim=c(0,35), ylab="Densité/100 m^2",xaxt='n', xlab="",main=levels(factor(data$basin))[pop])
   axis(1,at=1:59,labels=1967:2025, las=2, cex=0.25)
-  points(observedPop,q50, pch=16)
+  points(observedPop,q50, pch=16, col=colors)
   segments(observedPop,q5,observedPop,q95)
   segments(observedPop,q25,observedPop,q75, lwd=2)
+  legend("topright", legend = c("No", "Yes"), col = c("red", "black"), pch = 16, bty = "n", cex = 0.8, title = "Area")
 }
 dev.off()
 
@@ -167,22 +169,35 @@ riverIDs <- sort(unique(dataToJags$riverID))
 # #regarder pour la pop [1], aux points d'échantillonage (selon popAge)
 # caterplot(jagsfit,paste0("Dens_pred[1,",1:(dataToJags$maxPopAge[1]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[1]));title(levels(factor(data$basin))[1])
 
-pdf(file="results/Observed_densityByPop.pdf")
+pdf(file="results/Observed_densityByPop_naive.pdf")
 par(mfrow=c(2,1))
 #dens <- (jagsfit$BUGSoutput$sims.list$dens)
 for (pop in riverIDs){
   #ids <- which(dataToJags$riverID==pop)
   #observedPop <- 1:dataToJags$trueMaxPopAge[pop]#(dataToJags$year[ids])
-  tmp<-dataToJags$year[dataToJags$riverID==pop]
+  # tmp<-dataToJags$year[dataToJags$riverID==pop]
+  tmp<-dataToJags$popAge[dataToJags$riverID==pop]
   #observedPop<- 1:MaxPopAge[pop]
   #observedPop<- 1:max(dataToJags$maxPopAge)
-  observedPop<- sort(unique(tmp))-1962
+  # observedPop<- sort(unique(tmp))-1962
+  observedPop<- sort(unique(tmp))
   q5 <-quantiles["5%",observedPop,pop]
   q95 <-quantiles["95%",observedPop,pop]
   q25 <-quantiles["25%",observedPop,pop]
   q75 <-quantiles["75%",observedPop,pop]
-  plot(NULL, xlim=c(1,63),ylim=c(0,25), ylab="Densité/100 m^2",xaxt='n', xlab="",main=levels(factor(data$basin))[pop])
-  axis(1,at=1:63,labels=1963:2025, las=2, cex=0.25)
+  # plot(NULL, xlim=c(1,63),ylim=c(0,25), ylab="Densité/100 m^2",xaxt='n', xlab="popAge",main=levels(factor(data$basin))[pop])
+  # plot(NULL, xlim=c(1,((max(data$year[data$riverID==pop])-min(data$year[data$riverID==pop])+1))),ylim=c(0,25), ylab="Densité/100 m^2",xaxt='n', xlab="popAge",main=levels(factor(data$basin))[pop])
+  # plot(NULL, xlim=1:max(dataToJags$popAge[pop]),ylim=c(0,25), ylab="Densité/100 m^2",xaxt='n', xlab="popAge",main=levels(factor(data$basin))[pop])
+  # plot(NULL, xlim=c(1,(max(data$popAge[data$riverID==pop])+2025-max(data$year[data$riverID==pop]))),ylim=c(0,25), ylab="Densité/100 m^2",xaxt='n', xlab="popAge",main=levels(factor(data$basin))[pop])
+  # plot(NULL, xlim=c(1,max(data$popAge[data$riverID==pop])),ylim=c(0,25), ylab="Densité/100 m^2",xaxt='n', xlab="popAge",main=levels(factor(data$basin))[pop])
+  
+  plot(NULL, xlim=c(1,59),ylim=c(0,25), ylab="Densité/100 m^2",xaxt='n', xlab="",main=levels(factor(data$basin))[pop])
+  axis(1,at=1:59,labels=1967:2025, las=2, cex=0.25)
+  # axis(1,at=1:63,labels=1963:2025, las=2, cex=0.25)
+  # axis(1,at=1:((max(data$year[data$riverID==pop])-min(data$year[data$riverID==pop])+1)),labels=min(data$year[data$riverID==pop]):max(data$year[data$riverID==pop]), las=2, cex=0.25)
+  # axis(1,at=min(dataToJags$popAge[pop]):max(dataToJags$popAge[pop]),labels=min(dataToJags$popAge[pop]):max(dataToJags$popAge[pop]), las=2, cex=0.25)
+  # axis(1,at=1:max(data$popAge[data$riverID==pop]),labels=1:max(data$popAge[data$riverID==pop]), las=2, cex=0.25)
+  
   points(observedPop,quantiles["50%",observedPop,pop], pch=16)
   segments(observedPop,q5,observedPop,q95)
   segments(observedPop,q25,observedPop,q75, lwd=2)

@@ -84,8 +84,8 @@ jagsfit <- jags(dataToJags,
                 parameters.to.save = parameters,  
                 n.chains = 2,  # Number of chains to run.
                 inits = inits,  # initial values for hyperparameters
-                n.iter = 5000*1,   #MCMC iterations, ajouter si converge pas
-                n.burnin = 1000,   # discard first X iterations
+                n.iter = 10000*1,   #MCMC iterations, ajouter si converge pas
+                n.burnin = 2000,   # discard first X iterations
                 n.thin = 1
 ) # keep every X iterations //ex: garde tous les 100 itérations
 
@@ -122,7 +122,7 @@ traplot(jagsfit, parms = par)
 caterplot(jagsfit, parms = c("P_pred"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Proba capture");
 caterplot(jagsfit, parms = c("muS"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Moyenne surface");
 
-caterplot(jagsfit, parms = c("kappa"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Moyenne surface");
+caterplot(jagsfit, parms = c("kappa"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Kappa");
 #caterplot(jagsfit, parms = c("beta"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Moyenne surface");
 
 dev.off()
@@ -149,7 +149,7 @@ for (pop in riverIDs){
   q95 <-quantiles["95%",ids]
   q25 <-quantiles["25%",ids]
   q75 <-quantiles["75%",ids]
-  plot(NULL, xlim=c(1,59),ylim=c(0,25), ylab="Densité/100 m^2",xaxt='n', xlab="",main=levels(factor(data$basin))[pop])
+  plot(NULL, xlim=c(1,59),ylim=c(0,35), ylab="Densité/100 m^2",xaxt='n', xlab="",main=levels(factor(data$basin))[pop])
   axis(1,at=1:59,labels=1967:2025, las=2, cex=0.25)
   points(observedPop,q50, pch=16)
   segments(observedPop,q5,observedPop,q95)
