@@ -58,7 +58,7 @@ parameters <-c("muD"
                ,"delta"
                ,"sigmaP"
                ,'muS',"sigmaS"
-               #,"area"
+               ,"area"
                #"epsilonD","epsilonP", "tauP", "tauD", "tau_epsilon", "sigma_eps"
 ) 
 
@@ -104,7 +104,10 @@ dev.off()
 
 muD <- jagsfit$BUGSoutput$sims.list$muD
 str(muD)
+area <- jagsfit$BUGSoutput$sims.list$area
+str(area)
 quantiles <- apply(muD, 2, function(x) quantile(x, probs = c(0.05, 0.25,0.5, 0.75, 0.95)))
+quantiles_area <- apply(area, 2, function(x) quantile(x, probs = c(0.05, 0.25,0.5, 0.75, 0.95)))
 
 riverIDs <- sort(unique(dataToJags$riverID))
 pdf(file="results/Observed_densityByPop_naive.pdf")
@@ -116,18 +119,32 @@ for (pop in riverIDs){
   #observedPop<- 1:MaxPopAge[pop]
   #observedPop<- 1:max(dataToJags$maxPopAge)
   #observedPop<- sort(unique(tmp))-1962
+  q50_area <-quantiles_area["50%",ids]
+  q5_area <-quantiles_area["5%",ids]
+  q95_area <-quantiles_area["95%",ids]
+  q25_area <-quantiles_area["25%",ids]
+  q75_area <-quantiles_area["75%",ids]
   q50 <-quantiles["50%",ids]
   q5 <-quantiles["5%",ids]
   q95 <-quantiles["95%",ids]
   q25 <-quantiles["25%",ids]
   q75 <-quantiles["75%",ids]
-  colors <- ifelse(dataToJags$is.there.area[ids] == "No", "red", "black")
+  # colors <- ifelse(dataToJags$is.there.area[ids] == "No", "red", "black")
   plot(NULL, xlim=c(1,59),ylim=c(0,35), ylab="Densité/100 m^2",xaxt='n', xlab="",main=levels(factor(data$basin))[pop])
   axis(1,at=1:59,labels=1967:2025, las=2, cex=0.25)
-  points(observedPop,q50, pch=16, col=colors)
+  points(observedPop,q50, pch=16)#, col=colors)
   segments(observedPop,q5,observedPop,q95)
   segments(observedPop,q25,observedPop,q75, lwd=2)
-  legend("topright", legend = c("No", "Yes"), col = c("red", "black"), pch = 16, bty = "n", cex = 0.8, title = "Area")
+  # legend("topright", legend = c("No", "Yes"), col = c("red", "black"), pch = 16, bty = "n", cex = 0.8, title = "Area")
+  # Tracer les valeurs de 'area' à droite
+  par(new = TRUE)  # Créer un nouvel axe sur la droite du graphique
+  plot(observedPop, q50_area, type = "p", pch = 1, col = "blue", xaxt = "n", yaxt = "n", xlab = "", ylab = "", main = "", xlim = c(1, 59), ylim = c(0, 2500))
+  segments(observedPop, q5_area, observedPop, q95_area, col = "blue")
+  segments(observedPop, q25_area, observedPop, q75_area, col = "blue", lwd = 2)
+  
+  # Ajouter un axe à droite pour 'area'
+  axis(4, at = seq(0, 2500, by = 500), labels = seq(0, 2500, by = 500), col = "blue", col.axis = "blue")
+  mtext("Area", side = 4, line = 3, col = "blue")
 }
 dev.off()
 
@@ -169,7 +186,7 @@ riverIDs <- sort(unique(dataToJags$riverID))
 # #regarder pour la pop [1], aux points d'échantillonage (selon popAge)
 # caterplot(jagsfit,paste0("Dens_pred[1,",1:(dataToJags$maxPopAge[1]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[1]));title(levels(factor(data$basin))[1])
 
-pdf(file="results/Observed_densityByPop_naive.pdf")
+# pdf(file="results/Observed_densityByPop_naive.pdf")
 par(mfrow=c(2,1))
 #dens <- (jagsfit$BUGSoutput$sims.list$dens)
 for (pop in riverIDs){
