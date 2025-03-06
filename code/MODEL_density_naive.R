@@ -14,7 +14,8 @@ modelstat<-function(){
     muD[j] <- alpha_muD[riverID[j], year[j]]
     logit(p[j]) <- logit_p[j]
     logit_p[j]~dnorm(log_muP[j], tauP)
-    log_muP[j] <- delta + epsilonP[riverID[j]] # /!\ we consider year effect instead of age because protocol and sampling effort could have change over time.
+    # log_muP[j] <- delta + epsilonP[riverID[j]]# /!\ we consider year effect instead of age because protocol and sampling effort could have change over time.
+    log_muP[j] <- delta[censusType[j]] + epsilonP[riverID[j]]
     area[j] ~ dlnorm(muS[riverID[j]],tauS);T(,2500)
   }#end boucle
   
@@ -24,6 +25,7 @@ modelstat<-function(){
   for (i in 1:max(riverID)){
     muS[i]~dnorm(0, 0.01)#~dgamma(1, 1)
     epsilonP[i]~dnorm(0,tau_epsilon) 
+
     #naive estimation
     for (y in 1:maxMetapopAge){
       alpha_muD[i, y] ~ dlnorm(0, 1)
@@ -31,12 +33,20 @@ modelstat<-function(){
   }
 
   tau_epsilon <- pow(sigma_eps,-2)
-  #tau_epsilon[2] <- pow(sigma_eps[2],-2)
   sigma_eps ~ dunif(0,10)
-  #sigma_eps[2] ~ dunif(0,10)
-  logit(delta)<-logit_delta
-  logit_delta~dnorm(0, 1.5)
-  pmoy<-ilogit(delta)
+
+  # logit(delta)<-logit_delta
+  # logit_delta~dnorm(0, 1.5)
+  # pmoy<-ilogit(delta)
+  logit(delta[1])<-logit_delta1
+  logit_delta1~dnorm(0, 1.5)
+  pmoy_DL<-ilogit(delta[1])
+  logit(delta[2])<-logit_delta2
+  logit_delta2~dnorm(0, 1.5)
+  pmoy_P<-ilogit(delta[2])
+  logit(delta[3])<-logit_delta3
+  logit_delta3~dnorm(0, 1.5)
+  pmoy_PE<-ilogit(delta[3])
   #delta[2]~dnorm(0, 0.1)#~dgamma(1, 1)
   tauS <- pow(sigmaS,-2)# variance intra-annuelle
   sigmaS ~ dunif(0,1000)
@@ -44,12 +54,15 @@ modelstat<-function(){
   sigmaD ~ dunif(0,1000)
   tauP <- pow(sigmaP,-2)
   sigmaP ~ dunif(0,10)
-  # tauP[2] <- pow(sigmaP[2],-2)
-  # sigmaP[2] ~ dunif(0,10)
+
+
   
   
   for (pop in 1:max(riverID)){   
-    P_pred[pop]<- ilogit(delta+ epsilonP[pop])#+ (pow(t,delta[3])))
+    P_pred[pop]<- ilogit(delta[censusType[pop]]+ epsilonP[pop])#+ (pow(t,delta[3])))
+    # P_DL_pred[pop]<- ilogit(delta[1]+ epsilonP[pop])
+    # P_P_pred[pop]<- ilogit(delta[2]+ epsilonP[pop])
+    # P_PE_pred[pop]<- ilogit(delta[3]+ epsilonP[pop])
   } # end loop pop
 } #end model
 

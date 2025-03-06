@@ -304,6 +304,12 @@ firstCapture[pop] <- min(data$popAge[recode_factor==pop])
 #  data$year_capture[i]=data$Year_cohort[i] - firstCapture[data$riverID[i]]
 # }
 
+#Censustype
+data$censusType <- ifelse(!is.na(data$DL1), 1, 
+                          ifelse(!is.na(data$P1), 2, 
+                                 ifelse(!is.na(data$PE), 3, NA)))
+
+
 
 dataToJags <- list(                                               #liste aggr?g?e d'objets
   n = nrow(data)                                             #N fait n de long avec r?p?titions NA
@@ -329,6 +335,7 @@ dataToJags <- list(                                               #liste aggr?g?
   ,maxPopAge=maxPopAge
   ,maxMetapopAge=max(data$metapopAge)
   #trueMaxPopAge=trueMaxPopAge
+  ,censusType = data$censusType
   )
 
 

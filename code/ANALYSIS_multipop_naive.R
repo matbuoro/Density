@@ -51,21 +51,23 @@ inits<-function(){ # works for naive
 
 parameters <-c("muD"
                 ,"alpha_muD"
-                ,"pmoy"
-               ,"P_pred"
-               ,"sigma_eps"
-               ,"sigmaD"
-               ,"delta"
-               ,"sigmaP"
-               ,'muS',"sigmaS"
-               ,"area"
-               #"epsilonD","epsilonP", "tauP", "tauD", "tau_epsilon", "sigma_eps"
+              # ,"pmoy"
+                ,"pmoy_DL","pmoy_P","pmoy_PE"
+                ,"P_pred"
+              # ,"P_DL_pred","P_P_pred","P_PE_pred"
+                ,"sigma_eps"
+                ,"sigmaD"
+              # ,"delta"
+                , "delta[1]","delta[2]","delta[3]"
+                ,"sigmaP"
+                ,'muS',"sigmaS"
+                ,"area"
+               #"epsilonD","epsilonP", "tauP", "tauD", "tau_epsilon"
 ) 
 
 
 ## JAGS ####
 #appeler Jags pour compiler : données, modèle, valeurs initiales
-##Mat
 jagsfit <- jags(dataToJags,  
                 model.file = modelstat,
                 parameters.to.save = parameters,  
@@ -86,7 +88,7 @@ save(jagsfit,file="results/jagsfit_naive.Rdata")
 # rownames(DensitiesByPop) <- levels(factor(data$basin))
 # write.csv(round(DensitiesByPop,3), file="results/DensitiesByPop_median.csv")
 
-pdf(file="results/MCMC_naive.pdf")
+pdf(file="results/MCMC_naive_p_per_method.pdf")
 #print(jagsfit)
 traplot(jagsfit, parms = c("delta"))
 traplot(jagsfit, parms = c("sigma_eps"))
@@ -95,6 +97,7 @@ traplot(jagsfit, parms = c("sigmaD"))
 traplot(jagsfit, parms = c("sigmaS"))
 
 caterplot(jagsfit, parms = c("P_pred"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Proba capture");
+caterplot(jagsfit, parms = c("delta"), reorder=FALSE, horizontal = TRUE, labels=c(1,2,3)); title("Delta");
 caterplot(jagsfit, parms = c("muS"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Moyenne surface");
 
 dev.off()
