@@ -1,31 +1,4 @@
 
-individual_data<-read.table("data/individual_data.txt",h=T, fill=TRUE)
-individual_data<- subset(individual_data, basin == "Studer" | basin == "Norvegienne" | basin == "Korrigans")
-# individual_data$year <- as.numeric(as.character(individual_data$year))
-individual_data$length <- as.numeric(as.character(individual_data$length))
-
-Studer<-individual_data[individual_data$basin=="Studer",]
-Korrigans<-individual_data[individual_data$basin=="Korrigans",]
-Norvegienne<-individual_data[individual_data$basin=="Norvegienne",]
-
-pdf(file="results/Individuals_body_size_Norvegienne_Studer.pdf")
-par(mfrow=c(1,1))
-# boxplot(length ~ as.numeric(year), data = Korrigans,
-#         xlab = "Year", ylab = "Length",
-#         main = "Individuals body size - Korrigans",
-#         col = "lightgreen")
-boxplot(length ~ as.numeric(year), data = Norvegienne,
-        xlab = "Year", ylab = "Length",
-        main = "Individuals body size - Norvegienne",
-        col = "pink")
-boxplot(length ~ as.numeric(year), data = Studer,
-        xlab = "Year", ylab = "Length",
-        main = "Individuals body size - Studer",
-        col = "lightblue")
-dev.off()
-
-
-
 data<-read.table("data/census_data.txt",h=T, fill=TRUE)
 
 data <- subset(data, data$basin != "Chateau_>_Ferme_ou_Etangs")
@@ -264,8 +237,8 @@ data <- data[which(data$popAge>0),] # remove colDate > observation
 #data <- data[-which(data$popAge<(-3)),] # remove colDate > observation  ##risky business. Remove some rivers -> mess with IDs numbers ?
 
 # #Take out areas considered not reliable
-# table((as.factor(data$comment))=="not_reliable")
-# data <- subset(data, comment != "not_reliable" | is.na(comment))
+table((as.factor(data$comment))=="not_reliable")
+data <- subset(data, comment != "not_reliable" & comment != "unreliable" | is.na(comment))  #exclut 244 lignes
 
 # Keep only data from december to February
 # data <- subset(data, month %in% c(12,1,2,3))
@@ -308,7 +281,6 @@ firstCapture[pop] <- min(data$popAge[recode_factor==pop])
 data$censusType <- ifelse(!is.na(data$DL1), 1, 
                           ifelse(!is.na(data$P1), 2, 
                                  ifelse(!is.na(data$PE), 3, NA)))
-
 
 
 dataToJags <- list(                                               #liste aggr?g?e d'objets

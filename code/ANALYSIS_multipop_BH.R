@@ -71,7 +71,7 @@ parameters <-c("muD"
                ,"delta"
                ,"sigmaP"
                ,'muS',"sigmaS"
-               #,"area"
+               ,"area"
                #"epsilonD","epsilonP", "tauP", "tauD", "tau_epsilon", "sigma_eps"
 ) 
 
@@ -124,7 +124,7 @@ traplot(jagsfit, parms = par)
 caterplot(jagsfit, parms = c("P_pred"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Proba capture");
 caterplot(jagsfit, parms = c("muS"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Moyenne surface");
 
-caterplot(jagsfit, parms = c("kappa"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Moyenne surface");
+caterplot(jagsfit, parms = c("kappa"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Kappa");
 #caterplot(jagsfit, parms = c("beta"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Moyenne surface");
 
 dev.off()

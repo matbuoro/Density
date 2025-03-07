@@ -71,7 +71,7 @@ parameters <-c("muD"
                ,"delta"
                ,"sigmaP"
                ,'muS',"sigmaS"
-               #,"area"
+               ,"area"
                #"epsilonD","epsilonP", "tauP", "tauD", "tau_epsilon", "sigma_eps"
 ) 
 
