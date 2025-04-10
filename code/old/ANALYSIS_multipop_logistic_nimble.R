@@ -8,11 +8,11 @@ logit<-function(x) {log(x/(1-x))}
 
 
 # PACKAGES ####
-library(R2jags)
+#library(R2jags)
 library(mcmcplots)
 library(tidyr)
 library(ggplot2)
-load.module("glm")
+#load.module("glm")
 library(nimble)
 #setwd("C:/Users/gmbrahy/Documents/Modele_densite/data")
 
@@ -27,101 +27,108 @@ dataToNimble <-list(
 
 constants <-list(n=n
                  ,n1=n1
-                 ,n2=n2
-                 ,n3=n3
+                 #,n2=n2
+                 #,n3=n3
                  ,riverID=riverID
-                 ,year=year
-                 ,censusType=censusType
-                 ,coldate=coldate
-                 ,maxPopAge=maxPopAge
-                 ,maxMetapopAge=maxMetapopAge
-                 )
+                 #,year=year
+                 ,popAge=popAge
+                 #,censusType=censusType
+                 #,coldate=coldate
+                 #,maxPopAge=maxPopAge
+                 #,maxMetapopAge=maxMetapopAge
+)
 
 ## MODEL ####
 ##2. Modelisation statistique: inférence des paramètres en fonction des données 
 #langage bugs
 # source("code/MODEL_density_BH.R")
-source("code/MODEL_density_naive.R")
+source("code/MODEL_density_log_nimble.R")
 #source("code/MODEL_density_naive_nimble.R")
 
 ## INITS ####
-area_inits<-rep(NA, length(dataToJags$area))
-area_inits[is.na(dataToJags$area)]<- 250 
+area_inits<-dataToJags$area
+area_inits[is.na(area_inits)]<- 250 
+#dataToJags$area <- area_inits
 
-N_inits=NULL
-for (i in 1:dataToJags$n3[2]){
-#  for (i in dataToJags$n3[1]:dataToJags$n3[2]){
+N_inits=dens=NULL
+for (i in 1:dataToJags$n1[2]){
+  #for (i in 1:900){
   N_inits[i] <- ceiling(sum(c(dataToJags$DL1[i],dataToJags$DL2[i],dataToJags$DL3[i]
-                              ,dataToJags$P1[i],dataToJags$P2[i],dataToJags$PE[i]
-  ), na.rm = TRUE)/0.5)
+                              #,dataToJags$P1[i],dataToJags$P2[i],dataToJags$PE[i]
+  ), na.rm = TRUE)/0.7)
+  
+  dens[i]<-N_inits[i]/(area_inits[i]/100)
 }
+
+area <- dataToJags$area
+area_inits<-rep(NA, length(area))
+area_inits[is.na(area)]<- 250 
+#area_inits <- area_inits[1:dataToJags$n1[2]]
 
 
 inits<-function(){ # works for naive
   list(
+    #n1=dataToJags$n1
     N=N_inits
-    ,delta=invlogit(0.5)
-    ,sigmaP=1
-    ,area=area_inits
-    ,r=10
+    , dens=dens
+    , delta=invlogit(0.7)
+    , sigmaP=0.8
+    , sigmaD=0.7
+    , sigmaS=0.9
+    , sigma_eps=0.4
+    , kappa=exp(3)
+    #, pre_kappa=0.5
+    #, sigma_kappa=0.1
+    , alpha=3
+    , beta=0.1
+    , area=area_inits
+    , r=2
   )
 }
 
 parameters <-c("muD"
-                ,"alpha_muD"
+               ,"muD_pred"
+               ,"kappa"
+               #,"mu_kappa","sigma_kappa"
+               ,"alpha"
+               ,"beta"
                ,"pmoy"
-                #,"pmoy_DL"
-               #,"pmoy_P","pmoy_PE"
-                #,"P_pred"
-               ,"P_P_pred"
-              # ,"P_DL_pred","P_P_pred","P_PE_pred"
-                ,"sigma_eps"
-                ,"sigmaD"
-              ,"delta"
-                #, "delta[1]","delta[2]","delta[3]"
-                ,"sigmaP"
-                ,'muS',"sigmaS"
-                ,"area"
-              , "r"
-               #"epsilonD","epsilonP", "tauP", "tauD", "tau_epsilon"
+               ,"P_pred"
+               ,"sigma_eps"
+               ,"sigmaD"
+               ,"delta"
+               ,"sigmaP"
+               ,'muS',"sigmaS"
+               #,"area"
+               ,"r"
+               ,"t50"
+               #"epsilonD","epsilonP", "tauP", "tauD", "tau_epsilon", "sigma_eps"
 ) 
 
 
-## JAGS ####
-#appeler Jags pour compiler : données, modèle, valeurs initiales
-jagsfit <- jags(dataToJags,  
-                model.file = modelstat,
-                parameters.to.save = parameters,  
-                n.chains = 2,  # Number of chains to run.
-                inits = inits,  # initial values for hyperparameters
-                n.iter = 5000*20,   #MCMC iterations, ajouter si converge pas
-                n.burnin = 1000,   # discard first X iterations
-                n.thin = 20
-) # keep every X iterations //ex: garde tous les 100 itérations
-
 
 # RUN MCMC ####
-# n_chains <- 2 # number of chains
-# n_store <- 5000 # target of number of iteration to store per chain
-# n_burnin <- 1000 # number of iterations to discard
-# n_thin <- 1 # thinning interval
-# n_iter <- (n_store * n_thin) + n_burnin # number of iterations to run per chain
-# print(n_iter)
-# 
-# samples <- nimbleMCMC(code = modelstat,     # model code
-#                       data = dataToNimble,                  # data
-#                       constants =constants,        # constants
-#                       inits = inits,          # initial values
-#                       monitors = parameters,   # parameters to monitor
-#                       WAIC=FALSE,                      #waic
-#                       niter = n_iter,                  # nb iterations
-#                       nburnin = n_burnin,              # length of the burn-in
-#                       nchains = n_chains,              # nb of chains
-#                       thin = n_thin,                   # thinning interval (default = 1)
-#                       samplesAsCodaMCMC=T
-# )  
+n_chains <- 2 # number of chains
+n_store <- 5000 # target of number of iteration to store per chain
+n_burnin <- 1000 # number of iterations to discard
+n_thin <- 1 # thinning interval
+n_iter <- (n_store * n_thin) + n_burnin # number of iterations to run per chain
+print(n_iter)
 
-save(jagsfit,file="results/jagsfit_naive.Rdata")
+samples <- nimbleMCMC(code = modelstat,     # model code
+                      data = dataToNimble,                  # data
+                      constants =constants,        # constants
+                      inits = inits,          # initial values
+                      monitors = parameters,   # parameters to monitor
+                      WAIC=FALSE,                      #waic
+                      niter = n_iter,                  # nb iterations
+                      nburnin = n_burnin,              # length of the burn-in
+                      nchains = n_chains,              # nb of chains
+                      thin = n_thin,                   # thinning interval (default = 1)
+                      samplesAsCodaMCMC=T
+)
+
+save(samples,file="results/MCMC_nimble_log.Rdata")
 
 
 ## RESULTS ####

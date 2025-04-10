@@ -223,22 +223,22 @@ dev.off()
 
 
 
-alpha_muD <- jagsfit$BUGSoutput$sims.list$alpha_muD
-str(alpha_muD)
+#alpha_muD <- jagsfit$BUGSoutput$sims.list$alpha_muD
+#str(alpha_muD)
 
 # Assuming alpha_muD is already loaded in the environment
-quantiles <- apply(alpha_muD, c(2, 3), function(x) quantile(x, probs = c(0.05, 0.25,0.5, 0.75, 0.95)))
+#quantiles <- apply(alpha_muD, c(2, 3), function(x) quantile(x, probs = c(0.05, 0.25,0.5, 0.75, 0.95)))
 # This returns an array of size [3, 51, 63] where:
 # - The first dimension (size 3) corresponds to the quantiles (5%, 50%, 95%)
 # - The second dimension (size 51) corresponds to populations
 # - The third dimension (size 63) corresponds to the 3rd dimension indices
-quantiles <- aperm(quantiles, c(1, 3, 2))  # Change from (3, 51, 63) to (3, 63, 51)
+#quantiles <- aperm(quantiles, c(1, 3, 2))  # Change from (3, 51, 63) to (3, 63, 51)
 
 #MaxPopAge<-dataToJags$maxPopAge
 # Assuming `quantiles` is the [3, 51, 63] array from the previous step
 # and `trueMaxPopAge` is a vector of length 51
 
-riverIDs <- sort(unique(dataToJags$riverID))
+#riverIDs <- sort(unique(dataToJags$riverID))
 # # by MetapopAge
 # for (pop in riverIDs) {
 #   if(MaxPopAge[pop]==63) next;
@@ -257,27 +257,27 @@ riverIDs <- sort(unique(dataToJags$riverID))
 # #regarder pour la pop [1], aux points d'échantillonage (selon popAge)
 # caterplot(jagsfit,paste0("Dens_pred[1,",1:(dataToJags$maxPopAge[1]),"]"), reorder = FALSE, horizontal=FALSE, labels=1:(dataToJags$maxPopAge[1]));title(levels(factor(data$basin))[1])
 
-pdf(file="results/Observed_densityByPop.pdf")
-par(mfrow=c(2,1))
-#dens <- (jagsfit$BUGSoutput$sims.list$dens)
-for (pop in riverIDs){
-  #ids <- which(dataToJags$riverID==pop)
-  #observedPop <- 1:dataToJags$trueMaxPopAge[pop]#(dataToJags$year[ids])
-  tmp<-dataToJags$year[dataToJags$riverID==pop]
-  #observedPop<- 1:MaxPopAge[pop]
-  #observedPop<- 1:max(dataToJags$maxPopAge)
-  observedPop<- sort(unique(tmp))-1962
-  q5 <-quantiles["5%",observedPop,pop]
-  q95 <-quantiles["95%",observedPop,pop]
-  q25 <-quantiles["25%",observedPop,pop]
-  q75 <-quantiles["75%",observedPop,pop]
-  plot(NULL, xlim=c(1,63),ylim=c(0,25), ylab="Densité/100 m^2",xaxt='n', xlab="",main=levels(factor(data$basin))[pop])
-  axis(1,at=1:63,labels=1963:2025, las=2, cex=0.25)
-  points(observedPop,quantiles["50%",observedPop,pop], pch=16)
-  segments(observedPop,q5,observedPop,q95)
-  segments(observedPop,q25,observedPop,q75, lwd=2)
-}
-dev.off()
+# pdf(file="results/Observed_densityByPop.pdf")
+# par(mfrow=c(2,1))
+# #dens <- (jagsfit$BUGSoutput$sims.list$dens)
+# for (pop in riverIDs){
+#   #ids <- which(dataToJags$riverID==pop)
+#   #observedPop <- 1:dataToJags$trueMaxPopAge[pop]#(dataToJags$year[ids])
+#   tmp<-dataToJags$year[dataToJags$riverID==pop]
+#   #observedPop<- 1:MaxPopAge[pop]
+#   #observedPop<- 1:max(dataToJags$maxPopAge)
+#   observedPop<- sort(unique(tmp))-1962
+#   q5 <-quantiles["5%",observedPop,pop]
+#   q95 <-quantiles["95%",observedPop,pop]
+#   q25 <-quantiles["25%",observedPop,pop]
+#   q75 <-quantiles["75%",observedPop,pop]
+#   plot(NULL, xlim=c(1,63),ylim=c(0,25), ylab="Densité/100 m^2",xaxt='n', xlab="",main=levels(factor(data$basin))[pop])
+#   axis(1,at=1:63,labels=1963:2025, las=2, cex=0.25)
+#   points(observedPop,quantiles["50%",observedPop,pop], pch=16)
+#   segments(observedPop,q5,observedPop,q95)
+#   segments(observedPop,q25,observedPop,q75, lwd=2)
+# }
+# dev.off()
 
 
 
