@@ -17,7 +17,7 @@ load.module("glm")
 
 ## DATA ####
 source("code/DATA_format.R")
-str(dataToJags)
+attach(dataToJags)
 
 ## MODEL ####
 ##2. Modelisation statistique: inférence des paramètres en fonction des données 
@@ -54,11 +54,13 @@ inits<-function(){ # works for naive
      N=N_inits
     , dens=dens
     , delta=invlogit(0.7)
-    , sigmaP=1
+    , sigmaP=0.5
+    ,sigma_eps=0.5
+    ,sigmaD=1
     , kappa=exp(3.5)
     #, pre_kappa=0.5
-    , sigma_kappa=0.1
-    #, alpha=10
+    #, sigma_kappa=0.1
+    , alpha=10
     , beta=0.2
     , area=area_inits
     #, r=10
@@ -78,10 +80,10 @@ parameters <-c("muD"
                ,"delta"
                ,"sigmaP"
                ,'muS',"sigmaS"
-               #,"area"
+               ,"area","nu","sigma_nu"
                #,"r"
+               ,"C_pred"
                ,"t50"
-               #"epsilonD","epsilonP", "tauP", "tauD", "tau_epsilon", "sigma_eps"
 ) 
 
 
@@ -94,11 +96,11 @@ jagsfit <- jags(dataToJags,
                 n.chains = 3,  # Number of chains to run.
                 inits = inits,  # initial values for hyperparameters
                 n.iter = 5000*100,   #MCMC iterations, ajouter si converge pas
-                n.burnin = 2000,   # discard first X iterations
+                n.burnin = 1000,   # discard first X iterations
                 n.thin = 100
 ) # keep every X iterations //ex: garde tous les 100 itérations
 
-save(jagsfit,file="results/jagsfit_log.Rdata")
+save(jagsfit,file="results/jagsfit_log_cst.Rdata")
 
 
 ## RESULTS ####
@@ -108,7 +110,7 @@ save(jagsfit,file="results/jagsfit_log.Rdata")
 # rownames(DensitiesByPop) <- levels(factor(data$basin))
 # write.csv(round(DensitiesByPop,3), file="results/DensitiesByPop_median.csv")
 
-pdf(file="results/MCMC_log_all.pdf")
+pdf(file="results/MCMC_log_cst.pdf")
 #print(jagsfit)
 par <- c(
  "kappa"
@@ -124,6 +126,7 @@ par <- c(
 ,"sigmaP"
 #,'muS'
 ,"sigmaS"
+,"nu","sigma_nu"
 )
 traplot(jagsfit, parms = par)
 # traplot(jagsfit, parms = c("sigma_eps"))
@@ -156,6 +159,7 @@ parToPlot <- c(
   ,"sigmaP"
   #,'muS'
   ,"sigmaS"
+  ,"nu","sigma_nu"
 )
 
 
@@ -186,6 +190,28 @@ cor_matrix <- cor(filtered_samples)
 corrplot(cor_matrix, method = "color", type = "upper", 
          tl.col = "black", tl.srt = 45, 
          addCoef.col = "black", number.cex = 0.7)
+
+
+
+# Posterior check
+C_pred <- jagsfit$BUGSoutput$sims.list$C_pred
+# C <- c(dataToJags_DL$DL1+dataToJags_DL$DL2
+#         ,dataToJags_DL$P1+dataToJags_DL$P2
+#         ,dataToJags_PE)
+C=NULL
+for (i in 1:n){
+  #  for (i in dataToJags$n3[1]:dataToJags$n3[2]){
+  C[i] <- ceiling(sum(c(
+    DL1[i],DL2[i]#,DL3[i]
+    , P1[i],P2[i]
+    , PE[i]
+  ), na.rm = TRUE))
+}
+
+plot(NULL, xlim=c(0,200),ylim=c(0,200), ylab="Predict", xlab="Observed",main="Captures")
+abline(0,1)
+points(C,apply(C_pred,2,quantile,probs=0.5), pch=16)
+segments(C,apply(C_pred,2,quantile,probs=0.05),C,apply(C_pred,2,quantile,probs=0.95))
 
 dev.off()
 

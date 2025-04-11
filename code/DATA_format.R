@@ -328,3 +328,75 @@ dataToJags <- list(                                               #liste aggr?g?
   #trueMaxPopAge=trueMaxPopAge
   ,censusType = data$censusType
   )
+
+# De Lury only
+data_DL <- subset(data, !is.na(DL1)) # remove PE from dataset
+dataToJags_DL <- list(                                               #liste aggr?g?e d'objets
+  n = nrow(data_DL)    
+  ,DL1 = data_DL$DL1						
+  ,DL2 = data_DL$DL2
+  #DL3 = data$DL3
+  ,area = data_DL$area  # we work in log here
+  #,is.there.area = data$is.there.area
+  ,riverID = data_DL$riverID
+  #,vec_riverID=unique(data$riverID),
+  #,siteID = data$siteID,  
+  ,year= data_DL$year - min(data_DL$year)+1  # it is the year of sampling
+  ,popAge=data_DL$popAge  # it is the population age /!\ but by cohort gb+mb 27032024
+  #,max_year = max(data$Year_cohort)
+  #, year_capture=data$year_capture,
+  #,t0= doubtDate+1,
+  #,coldate=data_DL$coldate
+  #,maxPopAge=maxPopAge
+  ,maxMetapopAge=max(data$metapopAge)
+  #trueMaxPopAge=trueMaxPopAge
+  #,censusType = data$censusType
+)
+
+
+# Petersen only
+data_Petersen <- subset(data, !is.na(P1) & !is.na(P2)) # remove PE from dataset
+dataToJags_Petersen <- list(                                               #liste aggr?g?e d'objets
+  n = nrow(data_Petersen)    
+  ,P1 = data_Petersen$P1						
+  ,P2 = data_Petersen$P2
+  #DL3 = data$DL3
+  ,area = data_Petersen$area  # we work in log here
+  #,is.there.area = data$is.there.area
+  ,riverID = data_Petersen$riverID
+  #,vec_riverID=unique(data$riverID),
+  #,siteID = data$siteID,  
+  ,year= data_Petersen$year - min(data_Petersen$year)+1  # it is the year of sampling
+  ,popAge=data_Petersen$popAge  # it is the population age /!\ but by cohort gb+mb 27032024
+  #,max_year = max(data$Year_cohort)
+  #, year_capture=data$year_capture,
+  #,t0= doubtDate+1,
+  #,coldate=data_DL$coldate
+  #,maxPopAge=maxPopAge
+  ,maxMetapopAge=max(data_Petersen$metapopAge)
+  #trueMaxPopAge=trueMaxPopAge
+  #,censusType = data$censusType
+)
+
+# PE only
+data_PE <- subset(data, !is.na(PE)) # remove PE from dataset
+dataToJags_PE <- list(                                               #liste aggr?g?e d'objets
+  n = nrow(data_PE)    
+  ,PE = data_PE$PE						
+  #DL3 = data$DL3
+  ,area = data_PE$area  # we work in log here
+  #,is.there.area = data$is.there.area
+  ,riverID = data_PE$riverID
+  #,vec_riverID=unique(data$riverID),
+  #,siteID = data$siteID,  
+  ,year= data_PE$year - min(data_PE$year)+1  # it is the year of sampling
+  ,popAge=data_PE$popAge  # it is the population age /!\ but by cohort gb+mb 27032024
+  #,max_year = max(data$Year_cohort)
+  #, year_capture=data$year_capture,
+  #,t0= doubtDate+1,
+  #,coldate=data_DL$coldate
+  #,maxPopAge=maxPopAge
+  ,maxMetapopAge=max(data_PE$metapopAge)
+  #trueMaxPopAge=trueMaxPopAge
+  #,censusType = data$censusType
+)
