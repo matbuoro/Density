@@ -8,123 +8,127 @@ logit<-function(x) {log(x/(1-x))}
 
 
 # PACKAGES ####
-library(R2jags)
+#library(R2jags)
 library(mcmcplots)
 library(tidyr)
 library(ggplot2)
-load.module("glm")
-#library(nimble)
+#load.module("glm")
+library(nimble)
 #setwd("C:/Users/gmbrahy/Documents/Modele_densite/data")
 
 ## DATA ####
 source("code/DATA_format.R")
 attach(dataToJags)
-#attach(dataToJags_DL)
-#attach(dataToJags_Petersen)
-#attach(dataToJags_PE)
 
-# dataToNimble <-list(
-#   DL1=DL1
-#   ,DL2=DL2
-# )
+dataToNimble <-list(
+  DL1=DL1
+  ,DL2=DL2
+)
 
-# constants <-list(n=n
-#                  ,n1=n1
-#                  ,n2=n2
-#                  ,n3=n3
-#                  ,riverID=riverID
-#                  ,year=year
-#                  ,censusType=censusType
-#                  ,coldate=coldate
-#                  ,maxPopAge=maxPopAge
-#                  ,maxMetapopAge=maxMetapopAge
-#                  )
+constants <-list(n=n
+                 ,n1=n1
+                 #,n2=n2
+                 #,n3=n3
+                 ,riverID=riverID
+                 #,year=year
+                 ,popAge=popAge
+                 #,censusType=censusType
+                 #,coldate=coldate
+                 #,maxPopAge=maxPopAge
+                 #,maxMetapopAge=maxMetapopAge
+)
 
 ## MODEL ####
 ##2. Modelisation statistique: inférence des paramètres en fonction des données 
 #langage bugs
 # source("code/MODEL_density_BH.R")
-source("code/MODEL_density_naive.R")
+source("code/MODEL_density_log_nimble.R")
 #source("code/MODEL_density_naive_nimble.R")
 
 ## INITS ####
+area_inits<-dataToJags$area
+area_inits[is.na(area_inits)]<- 250 
+#dataToJags$area <- area_inits
+
+N_inits=dens=NULL
+for (i in 1:dataToJags$n1[2]){
+  #for (i in 1:900){
+  N_inits[i] <- ceiling(sum(c(dataToJags$DL1[i],dataToJags$DL2[i],dataToJags$DL3[i]
+                              #,dataToJags$P1[i],dataToJags$P2[i],dataToJags$PE[i]
+  ), na.rm = TRUE)/0.7)
+  
+  dens[i]<-N_inits[i]/(area_inits[i]/100)
+}
+
+area <- dataToJags$area
 area_inits<-rep(NA, length(area))
 area_inits[is.na(area)]<- 250 
-
-N_inits=NULL
-for (i in 1:n){
-#  for (i in dataToJags$n3[1]:dataToJags$n3[2]){
-  N_inits[i] <- ceiling(sum(c(
-    DL1[i],DL2[i]#,DL3[i]
-    , P1[i],P2[i]
-    , PE[i]
-  ), na.rm = TRUE)/0.5)
-}
+#area_inits <- area_inits[1:dataToJags$n1[2]]
 
 
 inits<-function(){ # works for naive
   list(
+    #n1=dataToJags$n1
     N=N_inits
-    ,delta=invlogit(0.5)
-    ,sigmaP=0.1
-    ,sigma_eps=0.1
-    ,area=area_inits
-    #,r=10
+    , dens=dens
+    , delta=invlogit(0.7)
+    , sigmaP=0.8
+    , sigmaD=0.7
+    , sigmaS=0.9
+    , sigma_eps=0.4
+    , kappa=exp(3)
+    #, pre_kappa=0.5
+    #, sigma_kappa=0.1
+    , alpha=3
+    , beta=0.1
+    , area=area_inits
+    , r=2
   )
 }
 
-parameters <-c(
-                #"muD"
-              "alpha_muD"
+parameters <-c("muD"
+               ,"muD_pred"
+               ,"kappa"
+               #,"mu_kappa","sigma_kappa"
+               ,"alpha"
+               ,"beta"
                ,"pmoy"
                ,"P_pred"
-                ,"sigma_eps"
-                ,"sigmaD"
-                ,"delta"
-                ,"sigmaP"
-                ,'muS',"sigmaS"
-                ,"area","nu","sigma_nu"
-              ,"r"
-              ,"C_pred"
-              #,"PE_pred"
+               ,"sigma_eps"
+               ,"sigmaD"
+               ,"delta"
+               ,"sigmaP"
+               ,'muS',"sigmaS"
+               #,"area"
+               ,"r"
+               ,"t50"
+               #"epsilonD","epsilonP", "tauP", "tauD", "tau_epsilon", "sigma_eps"
 ) 
 
 
-## JAGS ####
-#appeler Jags pour compiler : données, modèle, valeurs initiales
-jagsfit <- jags(dataToJags,  
-                model.file = modelstat,
-                parameters.to.save = parameters,  
-                n.chains = 2,  # Number of chains to run.
-                inits = inits,  # initial values for hyperparameters
-                n.iter = 5000*10,   #MCMC iterations, ajouter si converge pas
-                n.burnin = 1000,   # discard first X iterations
-                n.thin = 10   # thinning interval (default = 1)
-) # keep every X iterations //ex: garde tous les 100 itérations
-
 
 # RUN MCMC ####
-# n_chains <- 2 # number of chains
-# n_store <- 5000 # target of number of iteration to store per chain
-# n_burnin <- 1000 # number of iterations to discard
-# n_thin <- 1 # thinning interval
-# n_iter <- (n_store * n_thin) + n_burnin # number of iterations to run per chain
-# print(n_iter)
-# 
-# samples <- nimbleMCMC(code = modelstat,     # model code
-#                       data = dataToNimble,                  # data
-#                       constants =constants,        # constants
-#                       inits = inits,          # initial values
-#                       monitors = parameters,   # parameters to monitor
-#                       WAIC=FALSE,                      #waic
-#                       niter = n_iter,                  # nb iterations
-#                       nburnin = n_burnin,              # length of the burn-in
-#                       nchains = n_chains,              # nb of chains
-#                       thin = n_thin,                   # thinning interval (default = 1)
-#                       samplesAsCodaMCMC=T
-# )  
+n_chains <- 2 # number of chains
+n_store <- 5000 # target of number of iteration to store per chain
+n_burnin <- 1000 # number of iterations to discard
+n_thin <- 1 # thinning interval
+n_iter <- (n_store * n_thin) + n_burnin # number of iterations to run per chain
+print(n_iter)
 
-save(jagsfit,file="results/jagsfit_naive_all.Rdata")
+samples <- nimbleMCMC(code = modelstat,     # model code
+                      data = dataToNimble,                  # data
+                      constants =constants,        # constants
+                      inits = inits,          # initial values
+                      monitors = parameters,   # parameters to monitor
+                      WAIC=FALSE,                      #waic
+                      niter = n_iter,                  # nb iterations
+                      nburnin = n_burnin,              # length of the burn-in
+                      nchains = n_chains,              # nb of chains
+                      thin = n_thin,                   # thinning interval (default = 1)
+                      samplesAsCodaMCMC=T
+)
+
+save(samples,file="results/MCMC_nimble_log.Rdata")
 
 
 ## RESULTS ####
@@ -134,98 +138,24 @@ save(jagsfit,file="results/jagsfit_naive_all.Rdata")
 # rownames(DensitiesByPop) <- levels(factor(data$basin))
 # write.csv(round(DensitiesByPop,3), file="results/DensitiesByPop_median.csv")
 
-pdf(file="results/MCMC_naive_all.pdf")
+pdf(file="results/MCMC_naive_All.pdf")
 #print(jagsfit)
 traplot(jagsfit, parms = c("delta"))
 traplot(jagsfit, parms = c("sigma_eps"))
 traplot(jagsfit, parms = c("sigmaP"))
 traplot(jagsfit, parms = c("sigmaD"))
 traplot(jagsfit, parms = c("sigmaS"))
-#traplot(jagsfit, parms = c("r"))
-
-traplot(jagsfit, parms = c("nu"))
-traplot(jagsfit, parms = c("sigma_nu"))
-
-#traplot(jagsfit, parms = c("alpha_muD"))
+traplot(jagsfit, parms = c("r"))
 
 denplot(jagsfit,"pmoy")
 
 #caterplot(jagsfit, parms = c("Kappa"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Proba capture");
 
-caterplot(jagsfit, parms = c("P_pred"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Proba capture");
+caterplot(jagsfit, parms = c("P_P_pred"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Proba capture");
 #caterplot(jagsfit, parms = c("delta"), reorder=FALSE, horizontal = TRUE, labels=c(1,2,3)); title("Delta");
 caterplot(jagsfit, parms = c("muS"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Moyenne surface");
 
-
-#caterplot(jagsfit, parms = paste0("alpha_muD[35,",1:50,"]"), reorder=FALSE, horizontal = FALSE); title("Densité");
-
-
-parToPlot <- c(
-  "delta"
-  ,"sigma_eps"
-  ,"sigmaD"
-  ,"sigmaP"
-  #,'muS'
-  ,"sigmaS"
-  ,'nu'
-  ,"sigma_nu"
-  #,"r"
-)
-
-
-library(corrplot)  # For correlation plot
-
-# Convert MCMC list to matrix
-samples_mat <- as.matrix(jagsfit$BUGSoutput$sims.matrix) 
-
-# Get parameter names from samples
-param_names <- colnames(samples_mat)
-
-# Find parameters that match any in `parToPlot` (including multi-dimensional ones)
-matching_params <- param_names[grepl(paste0("^(", paste(parToPlot, collapse = "|"), ")\\[?\\d*\\]?$"), param_names)]
-#matching_params <- c(matching_params,"h2[1]","h2[2]")
-# Check if we found matching parameters
-if (length(matching_params) == 0) {
-  stop("No matching parameters found. Check parameter names!")
-}
-
-# Extract only the relevant parameters
-filtered_samples <- samples_mat[, matching_params, drop = FALSE]
-
-
-# Compute correlation matrix
-cor_matrix <- cor(filtered_samples)
-
-# Plot the correlation matrix
-corrplot(cor_matrix, method = "color", type = "upper", 
-         tl.col = "black", tl.srt = 45, 
-         addCoef.col = "black", number.cex = 0.7)
-
-
-
-# Posterior check
-C_pred <- jagsfit$BUGSoutput$sims.list$C_pred
-# C <- c(dataToJags_DL$DL1+dataToJags_DL$DL2
-#         ,dataToJags_DL$P1+dataToJags_DL$P2
-#         ,dataToJags_PE)
-C=NULL
-for (i in 1:n){
-  #  for (i in dataToJags$n3[1]:dataToJags$n3[2]){
-  C[i] <- ceiling(sum(c(
-    DL1[i],DL2[i]#,DL3[i]
-    , P1[i],P2[i]
-    , PE[i]
-  ), na.rm = TRUE))
-}
-
-plot(NULL, xlim=c(0,200),ylim=c(0,200), ylab="Predict", xlab="Observed",main="Captures")
-abline(0,1)
-points(C,apply(C_pred,2,quantile,probs=0.5), pch=16)
-segments(C,apply(C_pred,2,quantile,probs=0.05),C,apply(C_pred,2,quantile,probs=0.95))
-
 dev.off()
-
-
 
 
 

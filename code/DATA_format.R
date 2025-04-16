@@ -282,9 +282,28 @@ data$censusType <- ifelse(!is.na(data$DL1), 1,
                           ifelse(!is.na(data$P1), 2, 
                                  ifelse(!is.na(data$PE), 3, NA)))
 
+# remove area not available
+#data <- data[which(data$is.there.area=="Yes"),]
+
+# Sorting the data frame by censusType, riverID, and year
+data <- data[order(data$censusType, data$riverID, data$year), ]
+
+# Function to extract the first and last row of each group
+get_first_last <- function(x) {
+  x[c(1, nrow(x)), ]
+}
+
+# Get the row indices for the first and last occurrence of each censusType
+first_last_positions <- unlist(tapply(1:nrow(data), data$censusType, function(x) c(head(x, 1), tail(x, 1))))
+
+#data <- subset(data, data$censusType != 3) # remove PE from dataset
 
 dataToJags <- list(                                               #liste aggr?g?e d'objets
-  n = nrow(data)                                             #N fait n de long avec r?p?titions NA
+  n = nrow(data)    
+  ,n1=first_last_positions[1:2]
+  ,n2=first_last_positions[3:4]
+  ,n3=first_last_positions[5:6]
+  #N fait n de long avec r?p?titions NA
   #Nriver= length(unique(data$riverID)),
   ,DL1 = data$DL1						
   ,DL2 = data$DL2
@@ -294,8 +313,8 @@ dataToJags <- list(                                               #liste aggr?g?
   ,PE = data$PE # PE
   #n = rep(NA,nrow(data)), 
   ,area = data$area  # we work in log here
-  ,is.there.area = data$is.there.area
-  ,riverID = as.integer(recode_factor)
+  #,is.there.area = data$is.there.area
+  ,riverID = data$riverID
   #,vec_riverID=unique(data$riverID),
   #,siteID = data$siteID,  
   #,year= data$year - min(data$year)+1  # it is the year of sampling
@@ -311,8 +330,74 @@ dataToJags <- list(                                               #liste aggr?g?
   ,censusType = data$censusType
   )
 
+# De Lury only
+data_DL <- subset(data, !is.na(DL1)) # remove PE from dataset
+dataToJags_DL <- list(                                               #liste aggr?g?e d'objets
+  n = nrow(data_DL)    
+  ,DL1 = data_DL$DL1						
+  ,DL2 = data_DL$DL2
+  #DL3 = data$DL3
+  ,area = data_DL$area  # we work in log here
+  #,is.there.area = data$is.there.area
+  ,riverID = data_DL$riverID
+  #,vec_riverID=unique(data$riverID),
+  #,siteID = data$siteID,  
+  ,year= data_DL$year - min(data_DL$year)+1  # it is the year of sampling
+  ,popAge=data_DL$popAge  # it is the population age /!\ but by cohort gb+mb 27032024
+  #,max_year = max(data$Year_cohort)
+  #, year_capture=data$year_capture,
+  #,t0= doubtDate+1,
+  #,coldate=data_DL$coldate
+  #,maxPopAge=maxPopAge
+  ,maxMetapopAge=max(data$metapopAge)
+  #trueMaxPopAge=trueMaxPopAge
+  #,censusType = data$censusType
+)
 
 
+# Petersen only
+data_Petersen <- subset(data, !is.na(P1) & !is.na(P2)) # remove PE from dataset
+dataToJags_Petersen <- list(                                               #liste aggr?g?e d'objets
+  n = nrow(data_Petersen)    
+  ,P1 = data_Petersen$P1						
+  ,P2 = data_Petersen$P2
+  #DL3 = data$DL3
+  ,area = data_Petersen$area  # we work in log here
+  #,is.there.area = data$is.there.area
+  ,riverID = data_Petersen$riverID
+  #,vec_riverID=unique(data$riverID),
+  #,siteID = data$siteID,  
+  ,year= data_Petersen$year - min(data_Petersen$year)+1  # it is the year of sampling
+  ,popAge=data_Petersen$popAge  # it is the population age /!\ but by cohort gb+mb 27032024
+  #,max_year = max(data$Year_cohort)
+  #, year_capture=data$year_capture,
+  #,t0= doubtDate+1,
+  #,coldate=data_DL$coldate
+  #,maxPopAge=maxPopAge
+  ,maxMetapopAge=max(data_Petersen$metapopAge)
+  #trueMaxPopAge=trueMaxPopAge
+  #,censusType = data$censusType
+)
 
-
-#DL1 <- array(, dim=c())
+# PE only
+data_PE <- subset(data, !is.na(PE)) # remove PE from dataset
+dataToJags_PE <- list(                                               #liste aggr?g?e d'objets
+  n = nrow(data_PE)    
+  ,PE = data_PE$PE						
+  #DL3 = data$DL3
+  ,area = data_PE$area  # we work in log here
+  #,is.there.area = data$is.there.area
+  ,riverID = data_PE$riverID
+  #,vec_riverID=unique(data$riverID),
+  #,siteID = data$siteID,  
+  ,year= data_PE$year - min(data_PE$year)+1  # it is the year of sampling
+  ,popAge=data_PE$popAge  # it is the population age /!\ but by cohort gb+mb 27032024
+  #,max_year = max(data$Year_cohort)
+  #, year_capture=data$year_capture,
+  #,t0= doubtDate+1,
+  #,coldate=data_DL$coldate
+  #,maxPopAge=maxPopAge
+  ,maxMetapopAge=max(data_PE$metapopAge)
+  #trueMaxPopAge=trueMaxPopAge
+  #,censusType = data$censusType
+)
