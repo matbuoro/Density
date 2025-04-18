@@ -57,9 +57,10 @@ inits<-function(){ # works for naive
     , sigmaP=0.5
     , sigma_eps=0.5
     , sigmaD=1
+    , kappa=20
     #, kappa=rep(exp(2.5), max(dataToJags$riverID))
-    , mu_kappa=20
-    , sigma_kappa=.1
+    #, mu_kappa=20
+    #, sigma_kappa=.1
     , alpha=7
     , beta=0.1
     , area=area_inits
@@ -70,7 +71,7 @@ inits<-function(){ # works for naive
 parameters <-c("dens","muD"
                ,"muD_pred"
                ,"kappa"
-               ,"mu_kappa","sigma_kappa"
+               #,"mu_kappa","sigma_kappa"
                ,"alpha"
                ,"beta"
                ,"pmoy"
@@ -101,8 +102,8 @@ jagsfit <- jags(dataToJags,
                 n.thin = 10
 ) # keep every X iterations //ex: garde tous les 100 itérations
 
-save(jagsfit,file="results/jagsfit_logistic_kappaVariable.Rdata")
-
+save(jagsfit,file="results/jagsfit_logistic_kappaCst.Rdata")
+#save(jagsfit,file="results/jagsfit_logistic_kappaVariable.Rdata")
 
 ## RESULTS ####
 # Save densities estimates for each pop and age of colonisation (medians)
@@ -111,7 +112,8 @@ save(jagsfit,file="results/jagsfit_logistic_kappaVariable.Rdata")
 # rownames(DensitiesByPop) <- levels(factor(data$basin))
 # write.csv(round(DensitiesByPop,3), file="results/DensitiesByPop_median.csv")
 
-pdf(file="results/MCMC_logistic_kappaVariable.pdf")
+pdf(file="results/MCMC_logistic_kappaCst.pdf")
+#pdf(file="results/MCMC_logistic_kappaVariable.pdf")
 par(mfrow=c(1,1))
 #print(jagsfit)
 par <- c(
@@ -141,17 +143,17 @@ denplot(jagsfit,"t50")
 
 caterplot(jagsfit, parms = c("P_pred"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Proba capture");
 caterplot(jagsfit, parms = c("muS"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Moyenne surface");
-caterplot(jagsfit, parms = c("kappa"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Kappa");
+#caterplot(jagsfit, parms = c("kappa"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Kappa");
 #caterplot(jagsfit, parms = c("beta"), reorder=FALSE, horizontal = FALSE, labels=levels(factor(data$basin))); title("Moyenne surface");
-#caterplot(jagsfit, parms = c("muD_pred"), reorder=FALSE, horizontal = FALSE); title("Densité # temps");
+caterplot(jagsfit, parms = c("muD_pred"), reorder=FALSE, horizontal = FALSE); title("Densité # temps");
 caterplot(jagsfit, parms = c("epsilonP"), reorder=FALSE, horizontal = FALSE,labels=levels(factor(data$basin))); title("epsilon capture");
 
 #caterplot(jagsfit, parms = c("area"), reorder=FALSE, horizontal = FALSE)
 
 
 parToPlot <- c(
-  #"kappa"
-  "sigma_kappa","mu_kappa"
+  "kappa"
+  #"sigma_kappa","mu_kappa"
   #,"r"
   #,"t50"
   ,"alpha"
@@ -230,40 +232,38 @@ for(i in iter){
 # }
 
 
-for (pop in 1:max(dataToJags$riverID)){
-  caterplot(jagsfit, paste0("muD_pred[",1:50,",",pop,"]"), reorder=FALSE, horizontal = FALSE); title(levels(factor(data$basin))[pop]);
-  id_pop <- which(dataToJags$riverID==pop)
-  popAge<-dataToJags$popAge[id_pop]
-  
-  #muD
-  muD <- jagsfit$BUGSoutput$sims.list$muD[,id_pop]
-  if(length(id_pop)==1){
-    muD_quantiles <- quantile(muD, probs = c(0.05, 0.25,0.5, 0.75, 0.95))
-    points(popAge, muD_quantiles["50%"], pch=16)
-    segments(popAge, muD_quantiles["5%"], popAge, muD_quantiles["95%"])
-    segments(popAge, muD_quantiles["25%"], popAge, muD_quantiles["75%"], lwd=2)
-    
-    # dens
-    points(popAge, dens_quantiles["50%"], pch=16, col="pink")
-    segments(popAge, dens_quantiles["5%"], popAge, dens_quantiles["95%"], col="pink")
-    segments(popAge, dens_quantiles["25%"], popAge, dens_quantiles["75%"], lwd=2, col="pink")
-  }else{
-    muD_quantiles <-apply(muD, 2, function(x) quantile(x, probs = c(0.05, 0.25,0.5, 0.75, 0.95)))
-    points(popAge, muD_quantiles["50%",], pch=16)
-    segments(popAge, muD_quantiles["5%",], popAge, muD_quantiles["95%",])
-    segments(popAge, muD_quantiles["25%",], popAge, muD_quantiles["75%",], lwd=2)
-    
-    #Dens
-    dens <- jagsfit$BUGSoutput$sims.list$dens[,id_pop]
-    dens_quantiles <-apply(dens, 2, function(x) quantile(x, probs = c(0.05, 0.25,0.5, 0.75, 0.95)))
-    points(popAge, dens_quantiles["50%",], pch=16, col="pink")
-    segments(popAge, dens_quantiles["5%",], popAge, dens_quantiles["95%",], col="pink")
-    segments(popAge, dens_quantiles["25%",], popAge, dens_quantiles["75%",], lwd=2, col="pink")
-  }
-
-  
-
-  }
+# for (pop in 1:max(dataToJags$riverID)){
+#   caterplot(jagsfit, paste0("muD_pred[",1:50,",",pop,"]"), reorder=FALSE, horizontal = FALSE); title(levels(factor(data$basin))[pop]);
+#   id_pop <- which(dataToJags$riverID==pop)
+#   popAge<-dataToJags$popAge[id_pop]
+#   
+#   #muD
+#   muD <- jagsfit$BUGSoutput$sims.list$muD[,id_pop]
+#   if(length(id_pop)==1){
+#     muD_quantiles <- quantile(muD, probs = c(0.05, 0.25,0.5, 0.75, 0.95))
+#     points(popAge, muD_quantiles["50%"], pch=16)
+#     segments(popAge, muD_quantiles["5%"], popAge, muD_quantiles["95%"])
+#     segments(popAge, muD_quantiles["25%"], popAge, muD_quantiles["75%"], lwd=2)
+#     
+#     # dens
+#     points(popAge, dens_quantiles["50%"], pch=16, col="pink")
+#     segments(popAge, dens_quantiles["5%"], popAge, dens_quantiles["95%"], col="pink")
+#     segments(popAge, dens_quantiles["25%"], popAge, dens_quantiles["75%"], lwd=2, col="pink")
+#   }else{
+#     muD_quantiles <-apply(muD, 2, function(x) quantile(x, probs = c(0.05, 0.25,0.5, 0.75, 0.95)))
+#     points(popAge, muD_quantiles["50%",], pch=16)
+#     segments(popAge, muD_quantiles["5%",], popAge, muD_quantiles["95%",])
+#     segments(popAge, muD_quantiles["25%",], popAge, muD_quantiles["75%",], lwd=2)
+#     
+#     #Dens
+#     dens <- jagsfit$BUGSoutput$sims.list$dens[,id_pop]
+#     dens_quantiles <-apply(dens, 2, function(x) quantile(x, probs = c(0.05, 0.25,0.5, 0.75, 0.95)))
+#     points(popAge, dens_quantiles["50%",], pch=16, col="pink")
+#     segments(popAge, dens_quantiles["5%",], popAge, dens_quantiles["95%",], col="pink")
+#     segments(popAge, dens_quantiles["25%",], popAge, dens_quantiles["75%",], lwd=2, col="pink")
+#   }
+# 
+#   }
 
 dev.off()
 

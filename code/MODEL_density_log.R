@@ -16,8 +16,8 @@ modelstat<-function(){
     ##logistic
     #muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(beta[riverID[j]]*(year_capture[j])))
     #muD[j] <- kappa[riverID[j]] / (1+mu_alpha * exp(-beta[riverID[j]]*(year[j]))) #log
-    #muD[j] <- kappa / (1+alpha * exp(-beta*(popAge[j]))) #log
-    muD[j] <- kappa[riverID[j]] / (1+alpha * exp(-beta*(popAge[j]))) #log
+    muD[j] <- kappa / (1+alpha * exp(-beta*(popAge[j]))) #log
+    #muD[j] <- kappa[riverID[j]] / (1+alpha * exp(-beta*(popAge[j]))) #log
     
     # De Lury method
     DL1[j]~dbin(p1[j],N[j]) #C1 vecteur. y=1-> premier élemt C1. C1 varie tous les ans
@@ -56,8 +56,8 @@ modelstat<-function(){
     ##logistic
     #muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(beta[riverID[j]]*(year_capture[j])))
     #muD[j] <- kappa[riverID[j]] / (1+mu_alpha * exp(-beta[riverID[j]]*(year[j]))) #log
-    #muD[j] <- kappa / (1+alpha * exp(-beta*(popAge[j]))) #log
-    muD[j] <- kappa[riverID[j]] / (1+alpha * exp(-beta*(popAge[j]))) #log
+    muD[j] <- kappa / (1+alpha * exp(-beta*(popAge[j]))) #log
+    #muD[j] <- kappa[riverID[j]] / (1+alpha * exp(-beta*(popAge[j]))) #log
     
     # Petersen method
     P1[j]~dbin(p1[j],N[j]) #C1 vecteur. y=1-> premier élemt C1. C1 varie tous les ans
@@ -94,8 +94,8 @@ modelstat<-function(){
     ##logistic
     #muD[j] <- kappa[riverID[j]] / (1+alpha[riverID[j]] * exp(beta[riverID[j]]*(year_capture[j])))
     #muD[j] <- kappa[riverID[j]] / (1+mu_alpha * exp(-beta[riverID[j]]*(year[j]))) #log
-    #muD[j] <- kappa / (1+alpha * exp(-beta*(popAge[j]))) #log
-    muD[j] <- kappa[riverID[j]] / (1+alpha * exp(-beta*(popAge[j]))) #log
+    muD[j] <- kappa / (1+alpha * exp(-beta*(popAge[j]))) #log
+    #muD[j] <- kappa[riverID[j]] / (1+alpha * exp(-beta*(popAge[j]))) #log
     
     # PE method
     PE[j]~dbin(p1[j],N[j]) #C1 vecteur. y=1-> premier élemt C1. C1 varie tous les ans
@@ -131,7 +131,7 @@ modelstat<-function(){
     # for (y in 1:maxMetapopAge){
     #   alpha_muD[i, y] ~ dlnorm(0, 1)
     # }
-    kappa[i]~dlnorm(log(mu_kappa),tau_kappa)
+    #kappa[i]~dlnorm(log(mu_kappa),tau_kappa)
     #kappa[i]~dnorm(mu_kappa,tau_kappa);T(0,)
   }
   nu~dnorm(0, 0.01)
@@ -141,10 +141,10 @@ modelstat<-function(){
   #r ~ dgamma(1, 1)  # Prior for overdispersion
   
   #kappa~dlnorm(3,4)
-  #kappa ~ dlnorm(3.1, 1/(0.69*0.69)) # to keep 95% of kappa between [10; 50]
-  mu_kappa ~ dnorm(20, 1/4) # to keep 95% of kappa between [10; 50]
-  tau_kappa <- pow(sigma_kappa,-2)
-  sigma_kappa ~dgamma(2/5,5/2)
+  kappa ~ dlnorm(3.1, 1/(0.69*0.69)) # to keep 95% of kappa between [10; 50]
+  #mu_kappa ~ dnorm(20, 1/4) # to keep 95% of kappa between [10; 50]
+  #tau_kappa <- pow(sigma_kappa,-2)
+  #sigma_kappa ~dgamma(2/5,5/2)
   beta~dlnorm(0,1)
   alpha~dlnorm(0,1)
   
@@ -161,14 +161,14 @@ modelstat<-function(){
   for (pop in 1:max(riverID)){   
     P_pred[pop]<- ilogit(delta+ epsilonP[pop])
     
-    for (t in 1:50){
-      muD_pred[t,pop] <- kappa[pop] / (1+alpha * exp(-beta*(t)))
-    }
+    # for (t in 1:50){
+    #   muD_pred[t,pop] <- kappa[pop] / (1+alpha * exp(-beta*(t)))
+    # }
   } # end loop pop
   
-  # for (t in 1:50){
-  #   muD_pred[t] <- kappa / (1+alpha * exp(-beta*(t)))
-  # }
+  for (t in 1:50){
+    muD_pred[t] <- kappa / (1+alpha * exp(-beta*(t)))
+  }
   
   
 
