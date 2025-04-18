@@ -56,7 +56,7 @@ for (i in 1:n){
 #  for (i in dataToJags$n3[1]:dataToJags$n3[2]){
   N_inits[i] <- ceiling(sum(c(
     DL1[i],DL2[i]#,DL3[i]
-    , P1[i],P2[i]
+    , P1[i]#,P2[i]
     , PE[i]
   ), na.rm = TRUE)/0.5)
 }
@@ -124,7 +124,7 @@ jagsfit <- jags(dataToJags,
 #                       samplesAsCodaMCMC=T
 # )  
 
-save(jagsfit,file="results/jagsfit_naive_all.Rdata")
+save(jagsfit,file="results/jagsfit_naive_all2.Rdata")
 
 
 ## RESULTS ####
@@ -134,7 +134,7 @@ save(jagsfit,file="results/jagsfit_naive_all.Rdata")
 # rownames(DensitiesByPop) <- levels(factor(data$basin))
 # write.csv(round(DensitiesByPop,3), file="results/DensitiesByPop_median.csv")
 
-pdf(file="results/MCMC_naive_all.pdf")
+pdf(file="results/MCMC_naive_all2.pdf")
 #print(jagsfit)
 traplot(jagsfit, parms = c("delta"))
 traplot(jagsfit, parms = c("sigma_eps"))
@@ -213,7 +213,7 @@ for (i in 1:n){
   #  for (i in dataToJags$n3[1]:dataToJags$n3[2]){
   C[i] <- ceiling(sum(c(
     DL1[i],DL2[i]#,DL3[i]
-    , P1[i],P2[i]
+    , P1[i]#,P2[i]
     , PE[i]
   ), na.rm = TRUE))
 }
@@ -222,6 +222,17 @@ plot(NULL, xlim=c(0,200),ylim=c(0,200), ylab="Predict", xlab="Observed",main="Ca
 abline(0,1)
 points(C,apply(C_pred,2,quantile,probs=0.5), pch=16)
 segments(C,apply(C_pred,2,quantile,probs=0.05),C,apply(C_pred,2,quantile,probs=0.95))
+
+
+plot(NULL, xlim=c(0,200),ylim=c(0,200), ylab="Predict", xlab="Observed",main="Captures")
+abline(0,1)
+iter <- sample(1:nrow(C_pred), 10)
+for(i in iter){
+  points(C,C_pred[i,], pch=16, col=rgb(0,0,0,0.25))
+}
+# for(j in 1:1917){
+# text(C[j],C_pred[2,j], labels=j, pos=4, cex=0.5)
+# }
 
 dev.off()
 

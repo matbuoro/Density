@@ -49,13 +49,13 @@ modelstat<-function(){
 
     # Petersen method
     P1[j]~dbin(p1[j],N[j]) #C1 vecteur. y=1-> premier élemt C1. C1 varie tous les ans
-    P2[j]~dbin(p1[j],N[j])
+    #P2[j]~dbin(p1[j],N[j])
 
     # Prediction
     N_pred[j]~dpois(lambda[j])
     P1_pred[j]~dbin(p1[j],N_pred[j]) #C1 vecteur. y=1-> premier élemt C1. C1 varie tous les ans
-    P2_pred[j]~dbin(p1[j],N_pred[j])
-    C_pred[j] <- P1_pred[j] + P2_pred[j]
+    #P2_pred[j]~dbin(p1[j],N_pred[j])
+    C_pred[j] <- P1_pred[j] #+ P2_pred[j]
 
     # Capture probability
     #logit(p1[j]) <- delta + epsilonP[riverID[j]]

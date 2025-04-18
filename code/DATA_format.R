@@ -298,6 +298,9 @@ first_last_positions <- unlist(tapply(1:nrow(data), data$censusType, function(x)
 
 #data <- subset(data, data$censusType != 3) # remove PE from dataset
 
+#data$PE[72]<-60 # TO CHECK
+data$PE[which(!is.na(c(data$PE+data$DL1+data$DL2)))]<-NA
+
 dataToJags <- list(                                               #liste aggr?g?e d'objets
   n = nrow(data)    
   ,n1=first_last_positions[1:2]
