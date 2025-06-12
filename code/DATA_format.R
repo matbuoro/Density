@@ -233,7 +233,7 @@ data$basin[is.na(data$coldate)]
 data$metapopAge<-data$year-min(coldate)
 data$popAge<-(data$year)-(data$coldate)
 
-data <- data[which(data$popAge>0),] # remove colDate > observation
+data <- data[which(data$popAge>0),] # remove colDate > observation. We lose 76 data (2252 -> 2176) AND one basin (Valdotaine)
 #data <- data[-which(data$popAge<(-3)),] # remove colDate > observation  ##risky business. Remove some rivers -> mess with IDs numbers ?
 
 # #Take out areas considered not reliable
@@ -253,18 +253,17 @@ data <- subset(data, comment != "not_reliable" & comment != "unreliable" | is.na
 
 
 #here we filter to obtain only sites that were sampled in DL1 / DL2 or Petersen. 
-data<-subset(data, (!is.na(DL1) & !(is.na(DL2))) | ((!is.na(P1)) & !(is.na(P2))) | (!is.na(PE))) 
+data<-subset(data, (!is.na(DL1) & !(is.na(DL2))) | ((!is.na(P1)) & !(is.na(P2))) | (!is.na(PE))) #1932 -> 1917
 
 #note that these IDs are not the same between different datasets: if we want to merge results, we will have to use basin names
-data$riverID<-unclass(factor(data$basin)) #unclass prend le rang de chaque categorie. Basin transforme en facteur: variable categorielle
+data$riverID<-unclass(factor(data$basin)) #unclass prend le rang de chaque categorie
 #data$siteID<-rowid(data$XYZ,factor(data$riverID))  # this is the sampling site ID WITHIN the riverID. Useful for hierarchization
 
-basin_vector <- levels(factor(data$basin))
-# Recode factor based on position
-recode_factor <- factor(factor(data$basin), labels = seq_along(basin_vector))
+basin_vector <- levels(factor(data$basin)) #rivières dans l'ordre alphabétique
+recode_factor <- factor(factor(data$basin), labels = seq_along(basin_vector)) # Recode factor based on position
 
 maxPopAge=firstCapture=NULL
-trueMaxPopAge<-2025-colvector
+# trueMaxPopAge<-2025-colvector #51 positions, get rid of last one = Valdotaine
 
 #relatif à la cohorte donc ne va que jusque dernière pèche et pas jusque 2025. Ex: 
 for (pop in 1:max(data$riverID)){
@@ -404,3 +403,5 @@ dataToJags_PE <- list(                                               #liste aggr
   #trueMaxPopAge=trueMaxPopAge
   #,censusType = data$censusType
 )
+
+

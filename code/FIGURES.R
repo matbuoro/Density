@@ -257,3 +257,9 @@ for (basin in basins) {
 dev.off()
 
 
+
+png("results/figures/area_distribution.png", width = 800, height = 600)
+hist(data$area, main = "", col = "lightblue", xlim = c(0,3500))
+abline(v = 2500, col = "red", lwd = 2)
+dev.off()
+
